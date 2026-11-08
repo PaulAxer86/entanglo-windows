@@ -1,0 +1,205 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <Color x:Key="EntangloBgBase">#F5F6F8</Color>
+            <Color x:Key="EntangloSurface">#FFFFFFFF</Color>
+            <Color x:Key="EntangloSurfaceElevated">#FFFAFBFD</Color>
+            <Color x:Key="EntangloSurfaceMuted">#FFEFF1F4</Color>
+            <Color x:Key="EntangloAccent">#FF4F46E5</Color>
+            <Color x:Key="EntangloAccentDeep">#FF3730A3</Color>
+            <Color x:Key="EntangloAccentGlow">#FFE0E7FF</Color>
+            <Color x:Key="EntangloAccentSecondary">#FF06B6D4</Color>
+            <Color x:Key="EntangloAccentSecondaryGlow">#FFCFFAFE</Color>
+            <Color x:Key="EntangloOk">#FF16A34A</Color>
+            <Color x:Key="EntangloOkSoft">#FFD1FAE5</Color>
+            <Color x:Key="EntangloWarn">#FFD97706</Color>
+            <Color x:Key="EntangloWarnSoft">#FFFFEDD5</Color>
+            <Color x:Key="EntangloDanger">#FFDC2626</Color>
+            <Color x:Key="EntangloDangerSoft">#FFFEE2E2</Color>
+            <Color x:Key="EntangloTextPrimary">#FF111827</Color>
+            <Color x:Key="EntangloTextSecondary">#FF6B7280</Color>
+            <Color x:Key="EntangloTextMuted">#FF9CA3AF</Color>
+            <Color x:Key="EntangloBorderSubtle">#FFE5E7EB</Color>
+            <Color x:Key="EntangloBorderStrong">#FFD1D5DB</Color>
+            <Color x:Key="EntangloHeroStart">#FF4F46E5</Color>
+            <Color x:Key="EntangloHeroEnd">#FF06B6D4</Color>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="EntangloBgBase">#FF0B0E14</Color>
+            <Color x:Key="EntangloSurface">#FF1A1F2A</Color>
+            <Color x:Key="EntangloSurfaceElevated">#FF222837</Color>
+            <Color x:Key="EntangloSurfaceMuted">#FF161A23</Color>
+            <Color x:Key="EntangloAccent">#FF818CF8</Color>
+            <Color x:Key="EntangloAccentDeep">#FFA5B4FC</Color>
+            <Color x:Key="EntangloAccentGlow">#332E2E70</Color>
+            <Color x:Key="EntangloAccentSecondary">#FF22D3EE</Color>
+            <Color x:Key="EntangloAccentSecondaryGlow">#3322D3EE</Color>
+            <Color x:Key="EntangloOk">#FF34D399</Color>
+            <Color x:Key="EntangloOkSoft">#3334D399</Color>
+            <Color x:Key="EntangloWarn">#FFFBBF24</Color>
+            <Color x:Key="EntangloWarnSoft">#33FBBF24</Color>
+            <Color x:Key="EntangloDanger">#FFF87171</Color>
+            <Color x:Key="EntangloDangerSoft">#33F87171</Color>
+            <Color x:Key="EntangloTextPrimary">#FFF3F4F6</Color>
+            <Color x:Key="EntangloTextSecondary">#FF9CA3AF</Color>
+            <Color x:Key="EntangloTextMuted">#FF6B7280</Color>
+            <Color x:Key="EntangloBorderSubtle">#FF2A3040</Color>
+            <Color x:Key="EntangloBorderStrong">#FF3A4254</Color>
+            <Color x:Key="EntangloHeroStart">#FF6366F1</Color>
+            <Color x:Key="EntangloHeroEnd">#FF06B6D4</Color>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <SolidColorBrush x:Key="EntangloBgBaseBrush" Color="{ThemeResource EntangloBgBase}" />
+    <SolidColorBrush x:Key="EntangloSurfaceBrush" Color="{ThemeResource EntangloSurface}" />
+    <SolidColorBrush x:Key="EntangloSurfaceElevatedBrush" Color="{ThemeResource EntangloSurfaceElevated}" />
+    <SolidColorBrush x:Key="EntangloSurfaceMutedBrush" Color="{ThemeResource EntangloSurfaceMuted}" />
+    <SolidColorBrush x:Key="EntangloAccentBrush" Color="{ThemeResource EntangloAccent}" />
+    <SolidColorBrush x:Key="EntangloAccentDeepBrush" Color="{ThemeResource EntangloAccentDeep}" />
+    <SolidColorBrush x:Key="EntangloAccentGlowBrush" Color="{ThemeResource EntangloAccentGlow}" />
+    <SolidColorBrush x:Key="EntangloAccentSecondaryBrush" Color="{ThemeResource EntangloAccentSecondary}" />
+    <SolidColorBrush x:Key="EntangloAccentSecondaryGlowBrush" Color="{ThemeResource EntangloAccentSecondaryGlow}" />
+    <SolidColorBrush x:Key="EntangloCyanBrush" Color="{ThemeResource EntangloAccentSecondary}" />
+    <SolidColorBrush x:Key="EntangloOkBrush" Color="{ThemeResource EntangloOk}" />
+    <SolidColorBrush x:Key="EntangloOkSoftBrush" Color="{ThemeResource EntangloOkSoft}" />
+    <SolidColorBrush x:Key="EntangloWarnBrush" Color="{ThemeResource EntangloWarn}" />
+    <SolidColorBrush x:Key="EntangloWarnSoftBrush" Color="{ThemeResource EntangloWarnSoft}" />
+    <SolidColorBrush x:Key="EntangloDangerBrush" Color="{ThemeResource EntangloDanger}" />
+    <SolidColorBrush x:Key="EntangloDangerSoftBrush" Color="{ThemeResource EntangloDangerSoft}" />
+    <SolidColorBrush x:Key="EntangloTextPrimaryBrush" Color="{ThemeResource EntangloTextPrimary}" />
+    <SolidColorBrush x:Key="EntangloTextSecondaryBrush" Color="{ThemeResource EntangloTextSecondary}" />
+    <SolidColorBrush x:Key="EntangloTextMutedBrush" Color="{ThemeResource EntangloTextMuted}" />
+    <SolidColorBrush x:Key="EntangloBorderSubtleBrush" Color="{ThemeResource EntangloBorderSubtle}" />
+    <SolidColorBrush x:Key="EntangloBorderStrongBrush" Color="{ThemeResource EntangloBorderStrong}" />
+
+    <LinearGradientBrush x:Key="EntangloHeroBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="{ThemeResource EntangloHeroStart}" />
+        <GradientStop Offset="1" Color="{ThemeResource EntangloHeroEnd}" />
+    </LinearGradientBrush>
+
+    <!-- Typography -->
+    <Style x:Key="PageTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LineHeight" Value="32" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloTextPrimaryBrush}" />
+    </Style>
+    <Style x:Key="PageSubtitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloTextSecondaryBrush}" />
+    </Style>
+    <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="CharacterSpacing" Value="80" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloTextSecondaryBrush}" />
+    </Style>
+    <Style x:Key="CardTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloTextPrimaryBrush}" />
+    </Style>
+    <Style x:Key="CardSubtitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloTextSecondaryBrush}" />
+    </Style>
+    <Style x:Key="MetricValueStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LineHeight" Value="32" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloTextPrimaryBrush}" />
+    </Style>
+    <Style x:Key="MetricLabelStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="CharacterSpacing" Value="120" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloTextSecondaryBrush}" />
+    </Style>
+    <Style x:Key="LabelStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloTextSecondaryBrush}" />
+    </Style>
+
+    <!-- Reusable surfaces -->
+    <Style x:Key="CardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource EntangloSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource EntangloBorderSubtleBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="18" />
+    </Style>
+    <Style x:Key="SoftCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource EntangloSurfaceMutedBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource EntangloBorderSubtleBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="14" />
+    </Style>
+    <Style x:Key="HeroCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource EntangloHeroBrush}" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="Padding" Value="22" />
+    </Style>
+
+    <!-- Pills -->
+    <Style x:Key="PillBaseStyle" TargetType="Border">
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="PillOkStyle" TargetType="Border" BasedOn="{StaticResource PillBaseStyle}">
+        <Setter Property="Background" Value="{StaticResource EntangloOkSoftBrush}" />
+    </Style>
+    <Style x:Key="PillWarnStyle" TargetType="Border" BasedOn="{StaticResource PillBaseStyle}">
+        <Setter Property="Background" Value="{StaticResource EntangloWarnSoftBrush}" />
+    </Style>
+    <Style x:Key="PillDangerStyle" TargetType="Border" BasedOn="{StaticResource PillBaseStyle}">
+        <Setter Property="Background" Value="{StaticResource EntangloDangerSoftBrush}" />
+    </Style>
+    <Style x:Key="PillAccentStyle" TargetType="Border" BasedOn="{StaticResource PillBaseStyle}">
+        <Setter Property="Background" Value="{StaticResource EntangloAccentGlowBrush}" />
+    </Style>
+    <Style x:Key="PillMutedStyle" TargetType="Border" BasedOn="{StaticResource PillBaseStyle}">
+        <Setter Property="Background" Value="{StaticResource EntangloSurfaceMutedBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource EntangloBorderSubtleBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style x:Key="PillTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="CharacterSpacing" Value="40" />
+    </Style>
+
+    <!-- Buttons -->
+    <Style x:Key="AccentButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource EntangloAccentBrush}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderBrush" Value="{StaticResource EntangloAccentBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="14,7" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="SubtleButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource EntangloSurfaceMutedBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloTextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource EntangloBorderSubtleBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="14,7" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="DangerButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource EntangloDangerSoftBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource EntangloDangerBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource EntangloDangerSoftBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+</ResourceDictionary>

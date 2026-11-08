@@ -1,0 +1,45 @@
+# Build output
+bin/
+obj/
+out/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Publish output
+**/bin/publish/
+**/bin/Release/
+**/bin/Debug/
+**/bin/x64/
+
+# Installer output and built setups
+src/Entanglo.Windows/Installer/Output/
+src/Entanglo.Windows/Installer/*.exe
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Rider
+.idea/
+*.sln.iml
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml

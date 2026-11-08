@@ -1,0 +1,140 @@
+<Page
+    x:Class="Entanglo.Windows.Pages.NetworkPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+
+    <ScrollViewer Padding="28,20,28,28" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="20" MaxWidth="1180" HorizontalAlignment="Stretch">
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Network" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="Live links, RTT and discovery state for trusted peers."
+                           Style="{StaticResource PageSubtitleStyle}"/>
+            </StackPanel>
+
+            <!-- KPIs -->
+            <Grid ColumnSpacing="14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="LINKED" Style="{StaticResource MetricLabelStyle}"/>
+                        <TextBlock x:Name="LinkedCountText" Text="0"
+                                   Style="{StaticResource MetricValueStyle}"/>
+                        <TextBlock x:Name="LinkedSubText" Text="No live links"
+                                   Style="{StaticResource CardSubtitleStyle}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="LATENCY" Style="{StaticResource MetricLabelStyle}"/>
+                        <TextBlock x:Name="LatencyText" Text="—"
+                                   Style="{StaticResource MetricValueStyle}"/>
+                        <TextBlock Text="Best round-trip across live links"
+                                   Style="{StaticResource CardSubtitleStyle}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="DISCOVERY" Style="{StaticResource MetricLabelStyle}"/>
+                        <TextBlock x:Name="DiscoveryCountText" Text="0"
+                                   Style="{StaticResource MetricValueStyle}"/>
+                        <TextBlock x:Name="DiscoverySubText" Text="mDNS peers seen"
+                                   Style="{StaticResource CardSubtitleStyle}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Active links -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel Spacing="14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Active links" Style="{StaticResource CardTitleStyle}"/>
+                            <TextBlock Text="Per-peer transport state and platform"
+                                       Style="{StaticResource CardSubtitleStyle}"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Style="{StaticResource PillMutedStyle}"
+                                ToolTipService.ToolTip="Listening port">
+                            <StackPanel Orientation="Horizontal" Spacing="6"
+                                        VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE968;" FontSize="11"
+                                          Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
+                                <TextBlock x:Name="ListenPortText" Text="—"
+                                           Style="{StaticResource PillTextStyle}"
+                                           Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock x:Name="LinksEmpty"
+                               Text="No active links. Trusted peers will appear here once a TCP session is open."
+                               Style="{StaticResource CardSubtitleStyle}"
+                               TextWrapping="Wrap"/>
+
+                    <ListView x:Name="LinksList" Background="Transparent" SelectionMode="None"
+                              ItemContainerStyle="{x:Null}"
+                              ItemContainerTransitions="{x:Null}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCardStyle}" Margin="0,4,0,4">
+                                    <Grid ColumnSpacing="14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="40" Height="40" CornerRadius="6"
+                                                Background="{StaticResource EntangloAccentGlowBrush}"
+                                                VerticalAlignment="Center">
+                                            <FontIcon Glyph="&#xEC27;" FontSize="18"
+                                                      Foreground="{StaticResource EntangloAccentBrush}"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DeviceName}"
+                                                       FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding PlatformVersion}" FontSize="12"
+                                                       Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Style="{StaticResource PillMutedStyle}"
+                                                Margin="0,0,8,0"
+                                                ToolTipService.ToolTip="Round-trip latency">
+                                            <StackPanel Orientation="Horizontal" Spacing="6"
+                                                        VerticalAlignment="Center">
+                                                <FontIcon Glyph="&#xE945;" FontSize="11"
+                                                          Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
+                                                <TextBlock Text="{Binding RttLabel}"
+                                                           Style="{StaticResource PillTextStyle}"
+                                                           Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Grid.Column="3" Width="32" Height="32" CornerRadius="6"
+                                                Background="{StaticResource EntangloOkSoftBrush}"
+                                                VerticalAlignment="Center"
+                                                ToolTipService.ToolTip="Alive">
+                                            <FontIcon Glyph="&#xE73E;" FontSize="14"
+                                                      Foreground="{StaticResource EntangloOkBrush}"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

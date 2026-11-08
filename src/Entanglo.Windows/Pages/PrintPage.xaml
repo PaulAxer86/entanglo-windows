@@ -1,0 +1,12 @@
+﻿<Page
+    x:Class="Entanglo.Windows.Pages.PrintPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+    <StackPanel Padding="24,16" Spacing="16">
+        <TextBlock Text="Print" FontSize="24" FontWeight="SemiBold"
+                   Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
+        <TextBlock Text="Printer Bridge (Phase 3)" FontSize="14"
+                   Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
+    </StackPanel>
+</Page>
