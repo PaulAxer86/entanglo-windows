@@ -3,7 +3,7 @@
 ; Output:      Entanglo-Setup-<version>.exe
 
 #define MyAppName       "Entanglo"
-#define MyAppVersion    "0.1.59"
+#define MyAppVersion    "0.1.60"
 #define MyAppPublisher  "Paolo Asara"
 #define MyAppURL        "https://entanglo.pages.dev"
 #define MyAppExeName    "Entanglo.Windows.exe"

@@ -26,6 +26,9 @@ public sealed class FileTransfer
     public string? ErrorMessage { get; set; }
     public string? DestinationPath { get; set; }
     public string? Kind { get; init; }
+    /// <summary>True once all chunks have been sent (or the stream failed). Guards against
+    /// spurious offer-ack nacks the Mac sends before chunks are received.</summary>
+    public bool StreamingComplete { get; set; }
 
     public double Progress =>
         SizeBytes > 0 ? (double)BytesTransferred / SizeBytes : 0;
@@ -137,6 +140,10 @@ public sealed class FileTransferService
             MarkFailure(t.Id, ex.Message);
             OutgoingFileTerminal?.Invoke(t);
         }
+        finally
+        {
+            t.StreamingComplete = true;
+        }
     }
 
     // -------------------------------------------------------------- receiver
@@ -234,11 +241,20 @@ public sealed class FileTransferService
 
     public void HandleAck(FileAckPayload payload)
     {
+        FileTransfer? t;
+        lock (_lock) t = _transfers.FirstOrDefault(x => x.Id == payload.TransferId);
+
+        // The Mac sends a preliminary nack when it receives a FileOffer (before any chunks
+        // arrive). Ignore nacks while we are still streaming so only the final ack counts.
+        if (!payload.Ok && t is { StreamingComplete: false })
+        {
+            AppLog.Info($"[FileTransfer] Ignoring early nack for {payload.TransferId} (streaming not complete): {payload.FailureReason}");
+            return;
+        }
+
         if (payload.Ok) MarkCompleted(payload.TransferId);
         else            MarkFailure(payload.TransferId, payload.FailureReason ?? "Remote rejected");
 
-        FileTransfer? t;
-        lock (_lock) t = _transfers.FirstOrDefault(x => x.Id == payload.TransferId);
         if (t != null && t.Direction == TransferDirection.Outgoing)
             OutgoingFileTerminal?.Invoke(t);
     }
