@@ -329,7 +329,13 @@ public sealed class ConnectionCoordinator : IDisposable
                 if (_fileTransfers != null)
                 {
                     var offer = MessageCodec.DecodePayload<FileOfferPayload>(env);
-                    _fileTransfers.HandleOffer(offer, session.DeviceId, session.DeviceName);
+                    var capturedSession = session; // avoid closure over loop variable
+                    _fileTransfers.HandleOffer(offer, session.DeviceId, session.DeviceName,
+                        (type, bytes) =>
+                        {
+                            var frame = MessageCodec.EncodeRaw(type, _deviceId, _sessionId, bytes);
+                            _ = capturedSession.Transport.SendFrameAsync(frame, capturedSession.Cts.Token);
+                        });
                 }
                 break;
             case MessageType.FileChunk:

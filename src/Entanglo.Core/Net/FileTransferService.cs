@@ -46,15 +46,18 @@ public sealed class FileTransferService
     public const int ChunkSizeBytes = 2 * 1024 * 1024;
 
     readonly List<FileTransfer> _transfers = new();
-    readonly ConcurrentDictionary<string, FileStream> _incomingHandles = new();
-    readonly ConcurrentDictionary<string, int> _incomingNextSeq = new();
+    readonly ConcurrentDictionary<string, FileStream>              _incomingHandles    = new();
+    readonly ConcurrentDictionary<string, int>                     _incomingNextSeq    = new();
+    readonly ConcurrentDictionary<string, Action<MessageType, byte[]>> _incomingSendDirect = new();
     readonly object _lock = new();
 
     /// <summary>
-    /// Called when the service wants to push a frame at a specific peer.
-    /// Wired by ConnectionCoordinator so we don't circular-reference it.
+    /// Called when the service wants to push a frame at a specific peer (by device id).
+    /// Used for outgoing file offers and for sending data to named peers.
     /// </summary>
     public Action<string, MessageType, byte[]>? SendToPeer { get; set; }
+
+    readonly HashSet<string> _terminalFired = new(); // prevents double-firing OutgoingFileTerminal
 
     /// <summary>Fired right after an incoming transfer is marked completed.</summary>
     public event Action<FileTransfer>? IncomingFileComplete;
@@ -109,6 +112,7 @@ public sealed class FileTransferService
 
     async Task StreamChunksAsync(FileTransfer t, string filePath)
     {
+        bool success = false;
         try
         {
             using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -119,36 +123,74 @@ public sealed class FileTransferService
                 if (read <= 0 && seq < t.TotalChunks - 1)
                 {
                     MarkFailure(t.Id, "Read returned empty early");
-                    OutgoingFileTerminal?.Invoke(t);
+                    MaybeFireTerminal(t);
                     return;
                 }
                 var slice = new byte[read];
                 Array.Copy(buffer, slice, read);
-                var chunk = new FileChunkPayload(t.Id, seq, Convert.ToBase64String(slice));
+                var chunk     = new FileChunkPayload(t.Id, seq, Convert.ToBase64String(slice));
                 var chunkBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(chunk);
                 SendToPeer?.Invoke(t.PeerDeviceId, MessageType.FileChunk, chunkBytes);
-                t.ChunksDone = seq + 1;
+                t.ChunksDone        = seq + 1;
                 t.BytesTransferred += read;
                 Changed?.Invoke();
-                // Tiny yield so a 1 GB push doesn't starve the socket loop.
+                // Tiny yield so heartbeats are not starved during large transfers.
                 await Task.Delay(5);
             }
+            success = true;
         }
         catch (Exception ex)
         {
             AppLog.Error($"[FileTransfer] Stream failed: {ex.Message}");
             MarkFailure(t.Id, ex.Message);
-            OutgoingFileTerminal?.Invoke(t);
+            MaybeFireTerminal(t);
         }
         finally
         {
             t.StreamingComplete = true;
         }
+
+        if (success)
+            await WaitForAckOrTimeout(t, TimeSpan.FromSeconds(15));
+    }
+
+    async Task WaitForAckOrTimeout(FileTransfer t, TimeSpan timeout)
+    {
+        var deadline = DateTimeOffset.UtcNow + timeout;
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            await Task.Delay(200);
+            lock (_lock)
+            {
+                if (t.Status is TransferStatus.Completed or TransferStatus.Failed)
+                    return;
+            }
+        }
+        // Ack did not arrive within the timeout — mark as "sent but unconfirmed"
+        lock (_lock)
+        {
+            if (t.Status == TransferStatus.Active)
+            {
+                t.Status      = TransferStatus.Completed;
+                t.ErrorMessage = "Sent (receipt not confirmed)";
+                t.FinishedAt  = DateTimeOffset.UtcNow;
+            }
+        }
+        Changed?.Invoke();
+        MaybeFireTerminal(t);
+    }
+
+    void MaybeFireTerminal(FileTransfer t)
+    {
+        bool first;
+        lock (_lock) first = _terminalFired.Add(t.Id);
+        if (first) OutgoingFileTerminal?.Invoke(t);
     }
 
     // -------------------------------------------------------------- receiver
 
-    public void HandleOffer(FileOfferPayload payload, string peerDeviceId, string peerName)
+    public void HandleOffer(FileOfferPayload payload, string peerDeviceId, string peerName,
+        Action<MessageType, byte[]> sendDirect)
     {
         var dstDir = DownloadsDir();
         Directory.CreateDirectory(dstDir);
@@ -161,11 +203,12 @@ public sealed class FileTransferService
         catch (Exception ex)
         {
             AppLog.Error($"[FileTransfer] Cannot open {dst} for write: {ex.Message}");
-            SendAck(peerDeviceId, payload.TransferId, ok: false, reason: "Write open failed");
+            SendAckDirect(sendDirect, payload.TransferId, ok: false, reason: "Write open failed");
             return;
         }
         _incomingHandles[payload.TransferId] = fs;
         _incomingNextSeq[payload.TransferId] = 0;
+        _incomingSendDirect[payload.TransferId] = sendDirect;
 
         var t = new FileTransfer
         {
@@ -193,12 +236,14 @@ public sealed class FileTransferService
             AppLog.Error($"[FileTransfer] Chunk for unknown transfer {payload.TransferId}");
             return;
         }
+        _incomingSendDirect.TryGetValue(payload.TransferId, out var sendDirect);
+
         if (payload.Sequence != nextSeq)
         {
             AppLog.Error($"[FileTransfer] Out-of-order chunk {payload.Sequence} (expected {nextSeq}) — abort");
             CloseIncoming(payload.TransferId);
             MarkFailure(payload.TransferId, "Out-of-order chunk");
-            SendAck(peerDeviceId, payload.TransferId, ok: false, reason: "Out-of-order");
+            SendAckOnDelivery(sendDirect, peerDeviceId, payload.TransferId, ok: false, reason: "Out-of-order");
             return;
         }
 
@@ -209,7 +254,7 @@ public sealed class FileTransferService
             AppLog.Error($"[FileTransfer] Base64 decode failed: {ex.Message}");
             CloseIncoming(payload.TransferId);
             MarkFailure(payload.TransferId, "Base64 decode failed");
-            SendAck(peerDeviceId, payload.TransferId, ok: false, reason: "Decode failed");
+            SendAckOnDelivery(sendDirect, peerDeviceId, payload.TransferId, ok: false, reason: "Decode failed");
             return;
         }
         try { fs.Write(bytes, 0, bytes.Length); }
@@ -226,14 +271,15 @@ public sealed class FileTransferService
         lock (_lock) t = _transfers.FirstOrDefault(x => x.Id == payload.TransferId);
         if (t != null)
         {
-            t.ChunksDone = nextSeq + 1;
+            t.ChunksDone        = nextSeq + 1;
             t.BytesTransferred += bytes.Length;
             Changed?.Invoke();
             if (t.ChunksDone >= t.TotalChunks)
             {
                 CloseIncoming(payload.TransferId);
                 MarkCompleted(payload.TransferId);
-                SendAck(peerDeviceId, payload.TransferId, ok: true);
+                // Send ack on the SAME connection that delivered the chunks, not by senderDeviceId
+                SendAckOnDelivery(sendDirect, peerDeviceId, payload.TransferId, ok: true);
                 IncomingFileComplete?.Invoke(t);
             }
         }
@@ -256,7 +302,7 @@ public sealed class FileTransferService
         else            MarkFailure(payload.TransferId, payload.FailureReason ?? "Remote rejected");
 
         if (t != null && t.Direction == TransferDirection.Outgoing)
-            OutgoingFileTerminal?.Invoke(t);
+            MaybeFireTerminal(t);
     }
 
     public void ClearFinished()
@@ -276,10 +322,9 @@ public sealed class FileTransferService
     void CloseIncoming(string id)
     {
         if (_incomingHandles.TryRemove(id, out var fs))
-        {
             try { fs.Dispose(); } catch { }
-        }
         _incomingNextSeq.TryRemove(id, out _);
+        _incomingSendDirect.TryRemove(id, out _);
     }
 
     void MarkCompleted(string id)
@@ -307,11 +352,24 @@ public sealed class FileTransferService
         Changed?.Invoke();
     }
 
-    void SendAck(string peerId, string transferId, bool ok, string? reason = null)
+    // Preferred: send ack on the exact connection that delivered the chunks.
+    // Falls back to routing by peerId when sendDirect is unavailable.
+    void SendAckOnDelivery(Action<MessageType, byte[]>? sendDirect, string peerId,
+        string transferId, bool ok, string? reason = null)
     {
-        var ack = new FileAckPayload(transferId, ok, reason);
+        var ack   = new FileAckPayload(transferId, ok, reason);
         var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(ack);
-        SendToPeer?.Invoke(peerId, MessageType.FileAck, bytes);
+        if (sendDirect != null)
+            sendDirect(MessageType.FileAck, bytes);
+        else
+            SendToPeer?.Invoke(peerId, MessageType.FileAck, bytes);
+    }
+
+    void SendAckDirect(Action<MessageType, byte[]> sendDirect, string transferId, bool ok, string? reason = null)
+    {
+        var ack   = new FileAckPayload(transferId, ok, reason);
+        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(ack);
+        sendDirect(MessageType.FileAck, bytes);
     }
 
     public static string DownloadsDir() =>
