@@ -324,7 +324,7 @@ public sealed class UpdateService
     /// Download-if-needed, push to every connected peer, then run the
     /// installer helper and quit. Mirrors the Mac beginInstall flow.
     /// </summary>
-    public async Task BeginInstallAsync(Action quitAction, bool pushToPeers = true, IProgress<double>? downloadProgress = null, CancellationToken ct = default)
+    public async Task BeginInstallAsync(Action quitAction, bool pushToPeers = false, IProgress<double>? downloadProgress = null, CancellationToken ct = default)
     {
         var installerPath = AvailableUpdate?.LocalInstallerPath;
         if (installerPath == null || !File.Exists(installerPath))
@@ -334,8 +334,6 @@ public sealed class UpdateService
             AppLog.Error("[Updates] BeginInstall: no installer available");
             return;
         }
-        // Move whatever we've got into AvailableUpdate.LocalInstallerPath so
-        // PushUpdateToPeers picks it up even for the Netlify-download path.
         if (AvailableUpdate is { LocalInstallerPath: null } u)
             AvailableUpdate = u with { LocalInstallerPath = installerPath };
 
