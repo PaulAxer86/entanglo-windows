@@ -15,17 +15,16 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Spacing="4">
                     <TextBlock Text="Devices" Style="{StaticResource PageTitleStyle}"/>
-                    <TextBlock Text="Macs and PCs discovered on your network, plus pairing and trust."
-                               Style="{StaticResource PageSubtitleStyle}"/>
+                    <TextBlock
+                        Text="One row per device. Hover over the trust, mouse, keyboard and connection icons for details. Dimmed icons indicate unavailable features."
+                        Style="{StaticResource PageSubtitleStyle}"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
-                            VerticalAlignment="Center">
-                    <Button x:Name="ScanButton" Click="ScanButton_Click"
-                            Style="{StaticResource AccentButtonStyle}"
-                            ToolTipService.ToolTip="Refresh">
-                        <FontIcon Glyph="&#xE72C;" FontSize="14" Foreground="White"/>
-                    </Button>
-                </StackPanel>
+                <Button x:Name="ScanButton" Grid.Column="1" Click="ScanButton_Click"
+                        Style="{StaticResource AccentButtonStyle}"
+                        ToolTipService.ToolTip="Refresh"
+                        VerticalAlignment="Center">
+                    <FontIcon Glyph="&#xE72C;" FontSize="14" Foreground="White"/>
+                </Button>
             </Grid>
 
             <!-- Pending requests -->
@@ -43,8 +42,7 @@
                         </StackPanel>
                         <Border Grid.Column="1" Style="{StaticResource PillWarnStyle}"
                                 ToolTipService.ToolTip="Pending pair requests">
-                            <StackPanel Orientation="Horizontal" Spacing="6"
-                                        VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                 <FontIcon Glyph="&#xEA8F;" FontSize="11"
                                           Foreground="{StaticResource EntangloWarnBrush}"/>
                                 <TextBlock x:Name="PendingCountPill" Text="0"
@@ -53,8 +51,7 @@
                             </StackPanel>
                         </Border>
                     </Grid>
-                    <TextBlock x:Name="PendingEmpty"
-                               Text="No pending pair requests."
+                    <TextBlock x:Name="PendingEmpty" Text="No pending pair requests."
                                Style="{StaticResource CardSubtitleStyle}"/>
                     <ListView x:Name="PendingList" Background="Transparent" SelectionMode="None"
                               MaxHeight="240"
@@ -69,32 +66,29 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border Width="40" Height="40" CornerRadius="6"
+                                        <Border Width="36" Height="36" CornerRadius="6"
                                                 Background="{StaticResource EntangloWarnSoftBrush}"
                                                 VerticalAlignment="Center">
-                                            <FontIcon Glyph="&#xE7BA;" FontSize="18"
+                                            <FontIcon Glyph="&#xE7BA;" FontSize="16"
                                                       Foreground="{StaticResource EntangloWarnBrush}"/>
                                         </Border>
-                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding DeviceName}"
-                                                       FontSize="14" FontWeight="SemiBold"
+                                        <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DeviceName}" FontSize="13"
+                                                       FontWeight="SemiBold"
                                                        Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
                                             <TextBlock Text="{Binding DeviceId}" FontSize="11"
                                                        FontFamily="Consolas"
                                                        Foreground="{StaticResource EntangloTextSecondaryBrush}"
                                                        TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                            <Button Tag="{Binding}"
-                                                    Style="{StaticResource AccentButtonStyle}"
-                                                    Click="AllowButton_Click"
-                                                    ToolTipService.ToolTip="Allow">
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                                                    VerticalAlignment="Center">
+                                            <Button Tag="{Binding}" Style="{StaticResource AccentButtonStyle}"
+                                                    Click="AllowButton_Click" ToolTipService.ToolTip="Allow">
                                                 <FontIcon Glyph="&#xE73E;" FontSize="14" Foreground="White"/>
                                             </Button>
-                                            <Button Tag="{Binding}"
-                                                    Style="{StaticResource DangerButtonStyle}"
-                                                    Click="BlockButton_Click"
-                                                    ToolTipService.ToolTip="Block">
+                                            <Button Tag="{Binding}" Style="{StaticResource DangerButtonStyle}"
+                                                    Click="BlockButton_Click" ToolTipService.ToolTip="Block">
                                                 <FontIcon Glyph="&#xE711;" FontSize="14"
                                                           Foreground="{StaticResource EntangloDangerBrush}"/>
                                             </Button>
@@ -107,170 +101,119 @@
                 </StackPanel>
             </Border>
 
-            <!-- Discovered peers card -->
+            <!-- Unified compact device list -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
-                    <Grid>
+                <StackPanel Spacing="0">
+                    <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Discovered on LAN" Style="{StaticResource CardTitleStyle}"/>
-                            <TextBlock Text="Click Connect to open a link"
-                                       Style="{StaticResource CardSubtitleStyle}"/>
-                        </StackPanel>
+                        <TextBlock Text="Devices" Style="{StaticResource CardTitleStyle}"
+                                   VerticalAlignment="Center"/>
                         <Border Grid.Column="1" Style="{StaticResource PillMutedStyle}"
-                                ToolTipService.ToolTip="Discovered devices on LAN">
-                            <StackPanel Orientation="Horizontal" Spacing="6"
-                                        VerticalAlignment="Center">
-                                <FontIcon Glyph="&#xE721;" FontSize="11"
+                                ToolTipService.ToolTip="Known devices">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE968;" FontSize="11"
                                           Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
-                                <TextBlock x:Name="StatusText" Text="0"
+                                <TextBlock x:Name="DeviceCountPill" Text="0"
                                            Style="{StaticResource PillTextStyle}"
                                            Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
                     </Grid>
 
-                    <StackPanel x:Name="DevicesEmpty" Spacing="6" Padding="0,12">
-                        <FontIcon Glyph="&#xE968;" FontSize="22"
-                                  Foreground="{StaticResource EntangloTextMutedBrush}"
-                                  HorizontalAlignment="Left"/>
-                        <TextBlock Text="No devices found yet."
-                                   Style="{StaticResource CardTitleStyle}"/>
-                        <TextBlock Text="Make sure the macOS app is open on the same Wi-Fi network."
-                                   Style="{StaticResource CardSubtitleStyle}" TextWrapping="Wrap"/>
-                    </StackPanel>
+                    <TextBlock x:Name="DevicesEmpty"
+                               Text="No devices found yet. Make sure the other app is open on the same network."
+                               Style="{StaticResource CardSubtitleStyle}" TextWrapping="Wrap"
+                               Margin="0,4,0,4"/>
 
-                    <ListView x:Name="DevicesList" SelectionMode="None"
-                              Background="Transparent" ItemClick="DevicesList_ItemClick"
-                              IsItemClickEnabled="True"
-                              ItemContainerStyle="{x:Null}"
-                              ItemContainerTransitions="{x:Null}">
-                        <ListView.ItemTemplate>
+                    <ItemsControl x:Name="DevicesList">
+                        <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource SoftCardStyle}" Margin="0,4,0,4">
-                                    <Grid ColumnSpacing="14">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="1"/>
+                                        <RowDefinition Height="52"/>
+                                    </Grid.RowDefinitions>
+                                    <!-- Row separator -->
+                                    <Border Grid.Row="0" Height="1" Opacity="0.12"
+                                            Background="{StaticResource EntangloTextMutedBrush}"/>
+                                    <!-- Main row -->
+                                    <Grid Grid.Row="1" Padding="2,0" ColumnSpacing="10">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border Width="40" Height="40" CornerRadius="6"
-                                                Background="{Binding GlowBrush}"
-                                                VerticalAlignment="Center">
-                                            <FontIcon Glyph="&#xE770;" FontSize="18"
-                                                      Foreground="{Binding AccentBrush}"/>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding DeviceName}"
-                                                       FontSize="14" FontWeight="SemiBold"
+                                        <!-- Name + subtitle -->
+                                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Text="{Binding DeviceName}" FontSize="13"
+                                                       FontWeight="SemiBold"
                                                        Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                                            <TextBlock FontSize="12"
-                                                       Foreground="{StaticResource EntangloTextSecondaryBrush}">
-                                                <Run Text="{Binding Host}"/>
-                                                <Run Text=":" Foreground="{StaticResource EntangloTextMutedBrush}"/>
-                                                <Run Text="{Binding Port}"/>
-                                            </TextBlock>
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="0">
-                                            <Button Visibility="{Binding ConnectVisibility}"
-                                                    Tag="{Binding}"
-                                                    Click="ConnectButton_Click"
-                                                    Style="{StaticResource AccentButtonStyle}"
-                                                    ToolTipService.ToolTip="Connect">
-                                                <FontIcon Glyph="&#xE71B;" FontSize="14" Foreground="White"/>
-                                            </Button>
-                                            <Border Visibility="{Binding ConnectedVisibility}"
-                                                    Style="{StaticResource PillOkStyle}">
-                                                <StackPanel Orientation="Horizontal" Spacing="5"
-                                                            VerticalAlignment="Center">
-                                                    <FontIcon Glyph="&#xE73E;" FontSize="10"
-                                                              Foreground="{StaticResource EntangloOkBrush}"/>
-                                                    <TextBlock Text="Connected"
-                                                               Style="{StaticResource PillTextStyle}"
-                                                               Foreground="{StaticResource EntangloOkBrush}"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </StackPanel>
-            </Border>
-
-            <!-- Trusted devices -->
-            <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Trusted devices" Style="{StaticResource CardTitleStyle}"/>
-                            <TextBlock Text="Saved peers that can reconnect automatically"
-                                       Style="{StaticResource CardSubtitleStyle}"/>
-                        </StackPanel>
-                        <Border Grid.Column="1" Style="{StaticResource PillOkStyle}"
-                                ToolTipService.ToolTip="Trusted devices">
-                            <StackPanel Orientation="Horizontal" Spacing="6"
-                                        VerticalAlignment="Center">
-                                <FontIcon Glyph="&#xE72E;" FontSize="11"
-                                          Foreground="{StaticResource EntangloOkBrush}"/>
-                                <TextBlock x:Name="TrustedCountPill" Text="0"
-                                           Style="{StaticResource PillTextStyle}"
-                                           Foreground="{StaticResource EntangloOkBrush}"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-
-                    <TextBlock x:Name="TrustedEmpty"
-                               Text="No trusted devices yet. Approve a request above or accept one from the Mac."
-                               Style="{StaticResource CardSubtitleStyle}"
-                               TextWrapping="Wrap"/>
-
-                    <ListView x:Name="TrustedList" Background="Transparent" SelectionMode="None"
-                              ItemContainerStyle="{x:Null}"
-                              ItemContainerTransitions="{x:Null}">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <Border Style="{StaticResource SoftCardStyle}" Margin="0,4,0,4">
-                                    <Grid ColumnSpacing="14">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="40" Height="40" CornerRadius="6"
-                                                Background="{StaticResource EntangloOkSoftBrush}"
-                                                VerticalAlignment="Center">
-                                            <FontIcon Glyph="&#xE73E;" FontSize="18"
-                                                      Foreground="{StaticResource EntangloOkBrush}"/>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding DeviceName}"
-                                                       FontSize="14" FontWeight="SemiBold"
-                                                       Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                                            <TextBlock Text="{Binding PairedAt}" FontSize="11"
+                                            <TextBlock Text="{Binding Subtitle}" FontSize="11"
                                                        Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
                                         </StackPanel>
-                                        <Button Grid.Column="2" Tag="{Binding}"
-                                                Click="RevokeButton_Click"
-                                                Style="{StaticResource DangerButtonStyle}"
-                                                ToolTipService.ToolTip="Remove"
-                                                VerticalAlignment="Center">
-                                            <FontIcon Glyph="&#xE74D;" FontSize="14"
-                                                      Foreground="{StaticResource EntangloDangerBrush}"/>
-                                        </Button>
+                                        <!-- Icon bar -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                                                    VerticalAlignment="Center">
+                                            <!-- Trust -->
+                                            <FontIcon Glyph="&#xEB51;" FontSize="13"
+                                                      Foreground="{Binding TrustBrush}"
+                                                      ToolTipService.ToolTip="Trust status"/>
+                                            <!-- RTT -->
+                                            <TextBlock Text="{Binding RttDisplay}" FontSize="11"
+                                                       MinWidth="38" TextAlignment="Right"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{Binding RttBrush}"/>
+                                            <!-- Mouse (input) -->
+                                            <FontIcon Glyph="&#xEC18;" FontSize="13"
+                                                      Opacity="{Binding FeatureOpacity}"
+                                                      Foreground="{StaticResource EntangloTextSecondaryBrush}"
+                                                      ToolTipService.ToolTip="Mouse sharing"/>
+                                            <!-- Keyboard -->
+                                            <FontIcon Glyph="&#xE765;" FontSize="13"
+                                                      Opacity="{Binding FeatureOpacity}"
+                                                      Foreground="{StaticResource EntangloTextSecondaryBrush}"
+                                                      ToolTipService.ToolTip="Keyboard sharing"/>
+                                            <!-- Connection -->
+                                            <FontIcon Glyph="&#xE701;" FontSize="13"
+                                                      Foreground="{Binding ConnectionBrush}"
+                                                      ToolTipService.ToolTip="Connection"/>
+                                            <!-- Connect (only when not connected) -->
+                                            <Button Visibility="{Binding ConnectVisibility}"
+                                                    Tag="{Binding}" Click="ConnectButton_Click"
+                                                    Width="28" Height="28" Padding="0"
+                                                    Style="{StaticResource SubtleButtonStyle}"
+                                                    ToolTipService.ToolTip="Connect">
+                                                <FontIcon Glyph="&#xE71B;" FontSize="11"
+                                                          Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
+                                            </Button>
+                                            <!-- More actions (trusted devices) -->
+                                            <Button Visibility="{Binding RevokeVisibility}"
+                                                    Width="28" Height="28" Padding="0"
+                                                    Style="{StaticResource SubtleButtonStyle}"
+                                                    ToolTipService.ToolTip="More actions">
+                                                <Button.Flyout>
+                                                    <MenuFlyout>
+                                                        <MenuFlyoutItem Text="Revoke trust"
+                                                                        Tag="{Binding}"
+                                                                        Click="RevokeButton_Click">
+                                                            <MenuFlyoutItem.Icon>
+                                                                <FontIcon Glyph="&#xE74D;"
+                                                                          Foreground="{StaticResource EntangloDangerBrush}"/>
+                                                            </MenuFlyoutItem.Icon>
+                                                        </MenuFlyoutItem>
+                                                    </MenuFlyout>
+                                                </Button.Flyout>
+                                                <FontIcon Glyph="&#xE712;" FontSize="11"
+                                                          Foreground="{StaticResource EntangloTextSecondaryBrush}"/>
+                                            </Button>
+                                        </StackPanel>
                                     </Grid>
-                                </Border>
+                                </Grid>
                             </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
 
@@ -290,8 +233,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="ManualHost" PlaceholderText="Host (e.g. 192.168.1.63)"/>
                         <TextBox Grid.Column="1" x:Name="ManualPort" PlaceholderText="Port"/>
-                        <Button Grid.Column="2"
-                                Click="ManualConnect_Click"
+                        <Button Grid.Column="2" Click="ManualConnect_Click"
                                 Style="{StaticResource SubtleButtonStyle}"
                                 ToolTipService.ToolTip="Connect">
                             <FontIcon Glyph="&#xE71B;" FontSize="14"
@@ -300,6 +242,7 @@
                     </Grid>
                 </StackPanel>
             </Border>
+
         </StackPanel>
     </ScrollViewer>
 </Page>
