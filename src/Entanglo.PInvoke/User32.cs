@@ -39,6 +39,15 @@ public static partial class User32
     public const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
     public const uint KEYEVENTF_KEYUP       = 0x0002;
 
+    // Virtual keys for media and volume (not in KeyMap — sent as mediaKey events)
+    public const int VK_VOLUME_MUTE       = 0xAD;
+    public const int VK_VOLUME_DOWN       = 0xAE;
+    public const int VK_VOLUME_UP         = 0xAF;
+    public const int VK_MEDIA_NEXT_TRACK  = 0xB0;
+    public const int VK_MEDIA_PREV_TRACK  = 0xB1;
+    public const int VK_MEDIA_STOP        = 0xB2;
+    public const int VK_MEDIA_PLAY_PAUSE  = 0xB3;
+
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT { public int X; public int Y; }
 
