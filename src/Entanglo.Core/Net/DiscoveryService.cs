@@ -4,7 +4,7 @@ using Makaretu.Dns;
 
 namespace Entanglo.Core.Net;
 
-public record DiscoveredPeer(string InstanceName, string Host, int Port);
+public record DiscoveredPeer(string InstanceName, string Host, int Port, string? DeviceId = null);
 
 /// <summary>
 /// mDNS advertise + browse for _entanglo._tcp using Makaretu multicast DNS.
@@ -18,15 +18,17 @@ public sealed class DiscoveryService : IDisposable
     const string ServiceTypeLocal = "_entanglo._tcp.local";
     const string ServiceTypeFqdnPart = "._entanglo._tcp.";
 
-    readonly string _deviceName;
+    readonly string  _deviceName;
+    readonly string? _deviceId;
     int _port;
 
     MulticastService? _mdns;
     ServiceDiscovery? _sd;
     ServiceProfile?   _profile;
 
-    readonly Dictionary<string, (string host, int port)> _srvCache = new();
-    readonly Dictionary<string, string>                  _aCache   = new();
+    readonly Dictionary<string, (string host, int port)> _srvCache    = new();
+    readonly Dictionary<string, string>                  _aCache      = new();
+    readonly Dictionary<string, string>                  _txtIdCache  = new();
     readonly HashSet<string> _reported = new();
     readonly Dictionary<string, DiscoveredPeer> _knownPeers = new(StringComparer.OrdinalIgnoreCase);
 
@@ -35,10 +37,11 @@ public sealed class DiscoveryService : IDisposable
 
     public IReadOnlyCollection<DiscoveredPeer> CurrentPeers => _knownPeers.Values.ToArray();
 
-    public DiscoveryService(string deviceName, int port)
+    public DiscoveryService(string deviceName, int port, string? deviceId = null)
     {
         _deviceName = deviceName;
-        _port = port;
+        _port       = port;
+        _deviceId   = deviceId;
     }
 
     public void UpdatePort(int port) => _port = port;
@@ -55,6 +58,8 @@ public sealed class DiscoveryService : IDisposable
         _mdns.AnswerReceived += OnAnswerReceived;
 
         _profile = new ServiceProfile(_deviceName, ServiceType, (ushort)_port);
+        if (!string.IsNullOrEmpty(_deviceId))
+            _profile.AddProperty("id", _deviceId);
         _sd.Advertise(_profile);
 
         _mdns.Start();
@@ -147,6 +152,26 @@ public sealed class DiscoveryService : IDisposable
                     updated = true;
                     break;
                 }
+                case TXTRecord txt:
+                {
+                    var key = NormalizeDnsName(txt.Name.ToString());
+                    if (!IsEntangloServiceName(key)) break;
+                    foreach (var s in txt.Strings)
+                    {
+                        var eq = s.IndexOf('=');
+                        if (eq > 0 && s[..eq].Equals("id", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var id = s[(eq + 1)..];
+                            if (!string.IsNullOrEmpty(id))
+                            {
+                                _txtIdCache[key] = id;
+                                AppLog.Info($"[mDNS] TXT {key} id={id}");
+                            }
+                        }
+                    }
+                    updated = true;
+                    break;
+                }
             }
         }
 
@@ -170,18 +195,24 @@ public sealed class DiscoveryService : IDisposable
 
             if (port == 0) continue;
 
-            var peer = new DiscoveredPeer(instanceName, host, port);
+            _txtIdCache.TryGetValue(instanceFqdn, out var deviceId);
+            var peer = new DiscoveredPeer(instanceName, host, port, deviceId);
             var existing = _knownPeers.TryGetValue(instanceFqdn, out var prev) ? prev : null;
             _knownPeers[instanceFqdn] = peer;
-            if (existing != null
-                && existing.Host == peer.Host
-                && existing.Port == peer.Port
-                && existing.InstanceName == peer.InstanceName)
-                continue;
-            if (_reported.Contains(instanceFqdn) && existing != null) continue;
+
+            bool contentSame = existing != null
+                && existing.Host        == peer.Host
+                && existing.Port        == peer.Port
+                && existing.InstanceName == peer.InstanceName
+                && existing.DeviceId    == peer.DeviceId;
+            if (contentSame) continue;
+
+            // Always re-emit when DeviceId becomes known for the first time
+            bool idJustArrived = existing?.DeviceId == null && peer.DeviceId != null;
+            if (!idJustArrived && _reported.Contains(instanceFqdn) && existing != null) continue;
 
             _reported.Add(instanceFqdn);
-            AppLog.Info($"[mDNS] Peer found: {instanceName} @ {host}:{port}");
+            AppLog.Info($"[mDNS] Peer found: {instanceName} @ {host}:{port}{(deviceId != null ? $" id={deviceId}" : "")}");
             PeerFound?.Invoke(peer);
         }
     }

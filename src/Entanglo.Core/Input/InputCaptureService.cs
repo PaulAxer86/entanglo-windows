@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Entanglo.Core.Logging;
 using Entanglo.Core.Protocol;
 using Entanglo.Core.Protocol.Payloads;
 using Entanglo.PInvoke;
@@ -8,6 +9,9 @@ namespace Entanglo.Core.Input;
 /// <summary>
 /// Low-level mouse + keyboard hook. Runs on a dedicated thread with its own
 /// Win32 message pump so Windows doesn't time out and disable the hook (~5 s).
+/// When capture is active, Raw Input provides raw relative deltas (cursor is
+/// confined with ClipCursor so the local pointer never moves), and
+/// RawMouseCaptured fires for each mouse move event.
 /// PROTOCOL.md §5.5.
 /// </summary>
 public sealed class InputCaptureService : IDisposable
@@ -19,57 +23,144 @@ public sealed class InputCaptureService : IDisposable
     nint _mouseHook;
     nint _keyboardHook;
     Thread? _hookThread;
-    uint    _hookWin32ThreadId; // Win32 thread ID captured inside HookThreadProc
+    uint    _hookWin32ThreadId;
     volatile bool _active;
     volatile bool _capturing;
+    nint _rawHwnd;      // message-only window for Raw Input registration
+    bool _cursorHidden; // tracks ShowCursor balance — only modified on hook thread
 
-    // Raised on the hook thread — dispatch to UI/network on caller side
+    // Raised on the hook thread for all captured events (button, scroll, keyboard,
+    // and WM_MOUSEMOVE when NOT in capture mode — edge detection uses this).
     public event Action<InputEventMessage>? EventCaptured;
 
-    // Fired when the user presses Escape or Scroll Lock while capturing, so the
-    // caller (EdgeSwitcherService) can exit capture mode cleanly.  The key is
-    // already consumed before this fires — it will NOT reach Windows or the peer.
+    // Raised on the hook thread when capturing, with raw relative deltaX/deltaY from
+    // WM_INPUT. The LL mouse hook's WM_MOUSEMOVE is suppressed during capture so this
+    // is the only source of mouse motion while the cursor is confined.
+    public event Action<InputEventMessage>? RawMouseCaptured;
+
+    // Fired when Escape or Scroll Lock is pressed while capturing.
     public event Action? ReleaseRequested;
 
-    // When true, events are consumed (not passed to local system) and forwarded to peer
-    public bool IsCapturing
-    {
-        get => _capturing;
-        set => _capturing = value;
-    }
+    public bool IsCapturing => _capturing;
 
-    // Install hooks on a dedicated message-pump thread
     public void Start()
     {
         _active = true;
         _hookThread = new Thread(HookThreadProc)
         {
             IsBackground = true,
-            Name = "EntangloHook",
-            Priority = ThreadPriority.AboveNormal, // keep input responsive even when the app is backgrounded
+            Name         = "EntangloHook",
+            Priority     = ThreadPriority.AboveNormal,
         };
         _hookThread.Start();
     }
 
+    // Called by EdgeSwitcherService when cursor crosses a screen edge.
+    public void EnterCapture()
+    {
+        if (_capturing) return;
+        _capturing = true;
+        var sw = User32.GetSystemMetrics(User32.SM_CXSCREEN);
+        var sh = User32.GetSystemMetrics(User32.SM_CYSCREEN);
+        // Confine the cursor to a 1×1 rect at the center so the local pointer never moves.
+        var cx = sw / 2;
+        var cy = sh / 2;
+        unsafe
+        {
+            var rect = new User32.RECT { left = cx, top = cy, right = cx + 1, bottom = cy + 1 };
+            User32.ClipCursor(&rect);
+        }
+        if (!_cursorHidden)
+        {
+            User32.ShowCursor(false);
+            _cursorHidden = true;
+        }
+    }
+
+    // Called by EdgeSwitcherService on release (Escape, edge return, disconnect).
+    // Releases cursor confinement and makes the cursor visible again.
+    public void ExitCapture()
+    {
+        _capturing = false;
+        unsafe { User32.ClipCursor(null); }
+        if (_cursorHidden)
+        {
+            User32.ShowCursor(true);
+            _cursorHidden = false;
+        }
+    }
+
     void HookThreadProc()
     {
-        // Store Win32 thread ID so Dispose() can post WM_QUIT to THIS thread
-        // (PostQuitMessage targets the calling thread, not this one).
         _hookWin32ThreadId = Kernel32.GetCurrentThreadId();
-
         var hMod = Kernel32.GetModuleHandle(null);
+
+        // Create a message-only hidden window so Raw Input has a target HWND.
+        _rawHwnd = User32.CreateWindowExW(
+            0, "STATIC", null, 0, 0, 0, 0, 0,
+            User32.HWND_MESSAGE, nint.Zero, nint.Zero, nint.Zero);
+
+        if (_rawHwnd != nint.Zero)
+        {
+            var rid = new User32.RAWINPUTDEVICE
+            {
+                usUsagePage = 0x01, // HID_USAGE_PAGE_GENERIC
+                usUsage     = 0x02, // HID_USAGE_GENERIC_MOUSE
+                dwFlags     = User32.RIDEV_INPUTSINK, // receive even when not foreground
+                hwndTarget  = _rawHwnd,
+            };
+            User32.RegisterRawInputDevices([rid], 1,
+                (uint)Marshal.SizeOf<User32.RAWINPUTDEVICE>());
+        }
+        else
+        {
+            AppLog.Warning("[Capture] Raw Input window creation failed — relative motion unavailable");
+        }
+
         _mouseHook    = User32.SetWindowsHookExW(User32.WH_MOUSE_LL,    MouseProc,    hMod, 0);
         _keyboardHook = User32.SetWindowsHookExW(User32.WH_KEYBOARD_LL, KeyboardProc, hMod, 0);
 
-        // Message pump — required or Windows kills the hook after ~5 s
         while (_active && User32.GetMessage(out var msg, 0, 0, 0))
         {
+            if (msg.message == User32.WM_INPUT && _capturing)
+                HandleRawInput(msg.lParam);
             User32.TranslateMessage(msg);
             User32.DispatchMessageW(msg);
         }
 
         if (_mouseHook    != 0) User32.UnhookWindowsHookEx(_mouseHook);
         if (_keyboardHook != 0) User32.UnhookWindowsHookEx(_keyboardHook);
+        if (_rawHwnd != nint.Zero) User32.DestroyWindow(_rawHwnd);
+    }
+
+    unsafe void HandleRawInput(nint hRawInput)
+    {
+        uint size = 0;
+        User32.GetRawInputData(hRawInput, User32.RID_INPUT, nint.Zero, ref size,
+            (uint)sizeof(User32.RAWINPUTHEADER));
+        if (size == 0 || size > 256) return;
+
+        nint buf = Marshal.AllocHGlobal((int)size);
+        try
+        {
+            uint written = User32.GetRawInputData(hRawInput, User32.RID_INPUT, buf, ref size,
+                (uint)sizeof(User32.RAWINPUTHEADER));
+            if (written == 0) return;
+
+            var raw = Marshal.PtrToStructure<User32.RAWINPUT>(buf);
+            if (raw.header.dwType != 0) return; // not mouse
+            var dx = raw.mouse.lLastX;
+            var dy = raw.mouse.lLastY;
+            if (dx == 0 && dy == 0) return;
+
+            var evt = new InputEventMessage(
+                "mouseMove", null, null, dx, dy, null, null, null, 0, null, null);
+            RawMouseCaptured?.Invoke(evt);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buf);
+        }
     }
 
     nint MouseProc(int nCode, nint wParam, nint lParam)
@@ -78,15 +169,17 @@ public sealed class InputCaptureService : IDisposable
         {
             var data = Marshal.PtrToStructure<User32.MSLLHOOKSTRUCT>(lParam);
 
-            // Skip events we injected ourselves
             if (data.dwExtraInfo == User32.INJECTED_EXTRA_INFO)
                 return User32.CallNextHookEx(0, nCode, wParam, lParam);
+
+            if (_capturing && wParam == User32.WM_MOUSEMOVE)
+                return 1; // Raw Input handles moves during capture; consume to prevent passthrough
 
             var evt = BuildMouseEvent((int)wParam, data);
             if (evt != null)
             {
                 EventCaptured?.Invoke(evt);
-                if (_capturing) return 1; // consume — don't pass to local system
+                if (_capturing) return 1;
             }
         }
         return User32.CallNextHookEx(0, nCode, wParam, lParam);
@@ -98,8 +191,7 @@ public sealed class InputCaptureService : IDisposable
         {
             var data = Marshal.PtrToStructure<User32.KBDLLHOOKSTRUCT>(lParam);
 
-            // While in capture mode, Escape and Scroll Lock exit controller mode.
-            // Consume the key first so it never reaches Windows or the remote peer.
+            // Escape / Scroll Lock exits capture mode — consume before anything else.
             if (_capturing
                 && (data.vkCode == VK_ESCAPE || data.vkCode == VK_SCROLL)
                 && (wParam == User32.WM_KEYDOWN || wParam == User32.WM_SYSKEYDOWN))
@@ -112,7 +204,30 @@ public sealed class InputCaptureService : IDisposable
                 return User32.CallNextHookEx(0, nCode, wParam, lParam);
 
             bool isDown = wParam == User32.WM_KEYDOWN || wParam == User32.WM_SYSKEYDOWN;
-            int? macKey = Protocol.KeyMap.WinVkToMac((int)data.vkCode);
+
+            // Media / volume keys: forward as mediaKey events (no Mac keycode equivalent)
+            string? mediaKey = (int)data.vkCode switch
+            {
+                User32.VK_VOLUME_MUTE      => "mute",
+                User32.VK_VOLUME_DOWN      => "volumeDown",
+                User32.VK_VOLUME_UP        => "volumeUp",
+                User32.VK_MEDIA_NEXT_TRACK => "next",
+                User32.VK_MEDIA_PREV_TRACK => "previous",
+                User32.VK_MEDIA_STOP       => "stop",
+                User32.VK_MEDIA_PLAY_PAUSE => "playPause",
+                _                          => null,
+            };
+            if (mediaKey != null)
+            {
+                var evt = new InputEventMessage(
+                    "mediaKey", null, null, null, null, null, null, mediaKey,
+                    GetCurrentModifiers(), isDown, null);
+                EventCaptured?.Invoke(evt);
+                if (_capturing) return 1;
+            }
+
+            // Regular keys: map Mac keycode and forward
+            int? macKey = KeyMap.WinVkToMac((int)data.vkCode);
             if (macKey.HasValue)
             {
                 var evt = new InputEventMessage(
@@ -171,10 +286,8 @@ public sealed class InputCaptureService : IDisposable
 
     public void Dispose()
     {
+        ExitCapture(); // release ClipCursor / ShowCursor on any exit path
         _active = false;
-        // PostQuitMessage(0) would target the CALLING thread (UI thread), not
-        // the hook thread — causing the app to hang on quit.  Instead post
-        // WM_QUIT directly to the hook thread's Win32 message queue.
         if (_hookWin32ThreadId != 0)
             User32.PostThreadMessageW(_hookWin32ThreadId, WM_QUIT, 0, 0);
         _hookThread?.Join(500);

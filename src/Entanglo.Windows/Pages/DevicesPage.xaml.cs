@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Entanglo.Core.Logging;
 using Entanglo.Core.Net;
 using Microsoft.UI.Xaml;
@@ -10,72 +11,44 @@ namespace Entanglo.Windows.Pages;
 
 public sealed partial class DevicesPage : Page
 {
-    public ObservableCollection<PeerViewModel> Peers { get; } = [];
+    public ObservableCollection<DeviceRowViewModel> Devices { get; } = [];
     public ObservableCollection<PairRequestViewModel> Pending { get; } = [];
-    public ObservableCollection<TrustedDeviceViewModel> Trusted { get; } = [];
 
     readonly DiscoveryService _discovery;
 
     public DevicesPage()
     {
         InitializeComponent();
-        DevicesList.ItemsSource = Peers;
+        DevicesList.ItemsSource = Devices;
         PendingList.ItemsSource = Pending;
-        TrustedList.ItemsSource = Trusted;
 
         _discovery = App.Services.Discovery;
-        _discovery.PeerFound += OnPeerFound;
-        _discovery.PeerLost  += OnPeerLost;
+        _discovery.PeerFound += OnPeerFoundOrLost;
+        _discovery.PeerLost  += OnPeerNameLost;
         App.Services.Coordinator.PairRequestReceived += OnPairRequestReceived;
         App.Services.Coordinator.PeersChanged        += OnPeersChanged;
 
-        AddKnownPeers();
-        RefreshTrustedDevices();
-        RefreshEmptyStates();
+        RebuildDevices();
 
         Unloaded += (_, _) =>
         {
-            _discovery.PeerFound -= OnPeerFound;
-            _discovery.PeerLost  -= OnPeerLost;
+            _discovery.PeerFound -= OnPeerFoundOrLost;
+            _discovery.PeerLost  -= OnPeerNameLost;
             App.Services.Coordinator.PairRequestReceived -= OnPairRequestReceived;
             App.Services.Coordinator.PeersChanged        -= OnPeersChanged;
         };
     }
 
-    void AddKnownPeers()
-    {
-        foreach (var peer in _discovery.CurrentPeers)
-            OnPeerFound(peer);
-    }
+    // DiscoveryService event shims → marshal to UI thread
 
-    void OnPeerFound(DiscoveredPeer peer)
-    {
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            if (Peers.Any(p => p.Host == peer.Host && p.Port == peer.Port)) return;
-            var vm = new PeerViewModel
-            {
-                DeviceName = peer.InstanceName,
-                Host = peer.Host,
-                Port = peer.Port,
-            };
-            ApplyStatus(vm);
-            Peers.Add(vm);
-            StatusText.Text = Peers.Count.ToString();
-            RefreshEmptyStates();
-        });
-    }
+    void OnPeerFoundOrLost(DiscoveredPeer _) =>
+        DispatcherQueue.TryEnqueue(RebuildDevices);
 
-    void OnPeerLost(string id)
-    {
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            var vm = Peers.FirstOrDefault(p => p.Host == id || p.DeviceName == id);
-            if (vm != null) Peers.Remove(vm);
-            StatusText.Text = Peers.Count.ToString();
-            RefreshEmptyStates();
-        });
-    }
+    void OnPeerNameLost(string _) =>
+        DispatcherQueue.TryEnqueue(RebuildDevices);
+
+    void OnPeersChanged() =>
+        DispatcherQueue.TryEnqueue(RebuildDevices);
 
     void OnPairRequestReceived(string deviceId, string deviceName)
     {
@@ -83,119 +56,99 @@ public sealed partial class DevicesPage : Page
         {
             if (Pending.Any(p => p.DeviceId == deviceId)) return;
             Pending.Add(new PairRequestViewModel { DeviceId = deviceId, DeviceName = deviceName });
-            RefreshEmptyStates();
+            RefreshPendingUI();
         });
     }
 
-    void OnPeersChanged()
+    // Builds (or rebuilds) the unified device list from three sources:
+    // 1. Trust store  — trusted devices, may be offline
+    // 2. Active peers — connected, have platform/RTT
+    // 3. Discovery    — currently visible on LAN, have host/port
+    void RebuildDevices()
     {
-        DispatcherQueue.TryEnqueue(() =>
+        var map = new Dictionary<string, DeviceRowViewModel>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var d in App.Services.TrustStore.Devices)
+            map[d.DeviceId] = new DeviceRowViewModel
+            {
+                DeviceId   = d.DeviceId,
+                DeviceName = d.DeviceName,
+                IsTrusted  = true,
+            };
+
+        foreach (var p in App.Services.Coordinator.ActivePeers)
         {
-            RefreshTrustedDevices();
-            RefreshAllPeerStatuses();
-            RefreshEmptyStates();
-        });
-    }
-
-    void RefreshAllPeerStatuses()
-    {
-        foreach (var vm in Peers) ApplyStatus(vm);
-    }
-
-    void ApplyStatus(PeerViewModel vm)
-    {
-        var trusted = App.Services.TrustStore.Devices
-            .Any(d => string.Equals(d.DeviceName, vm.DeviceName, StringComparison.OrdinalIgnoreCase));
-        var connected = App.Services.Coordinator.ActivePeers
-            .Any(p => string.Equals(p.DeviceName, vm.DeviceName, StringComparison.OrdinalIgnoreCase));
-
-        if (connected)
-        {
-            vm.StatusLabel    = "Connected";
-            vm.StatusGlyph    = "\uE73E";
-            vm.ActionGlyph    = "\uE73E";
-            vm.ActionTooltip  = "Connected";
-            vm.CanConnect     = false;
-            vm.GlowBrushKey   = "EntangloOkSoftBrush";
-            vm.AccentBrushKey = "EntangloOkBrush";
+            if (!map.TryGetValue(p.DeviceId, out var row))
+                map[p.DeviceId] = row = new DeviceRowViewModel { DeviceId = p.DeviceId };
+            row.DeviceName  = p.DeviceName;
+            row.Platform    = p.Platform ?? "";
+            row.IsConnected = true;
+            row.IsTrusted   = p.Trusted;
+            row.RttMs       = p.LastRttMs;
         }
-        else if (trusted)
+
+        foreach (var peer in _discovery.CurrentPeers)
         {
-            vm.StatusLabel    = "Trusted";
-            vm.StatusGlyph    = "\uE72E";
-            vm.ActionGlyph    = "\uE71B";
-            vm.ActionTooltip  = "Connect";
-            vm.CanConnect     = true;
-            vm.GlowBrushKey   = "EntangloOkSoftBrush";
-            vm.AccentBrushKey = "EntangloOkBrush";
+            var existing = map.Values.FirstOrDefault(r =>
+                string.Equals(r.DeviceName, peer.InstanceName, StringComparison.OrdinalIgnoreCase));
+            if (existing == null)
+            {
+                existing = new DeviceRowViewModel { DeviceName = peer.InstanceName };
+                map["_disc_" + peer.InstanceName] = existing;
+            }
+            existing.Host = peer.Host;
+            existing.Port = peer.Port;
         }
-        else
-        {
-            vm.StatusLabel    = "Discovered";
-            vm.StatusGlyph    = "\uE701";
-            vm.ActionGlyph    = "\uE71B";
-            vm.ActionTooltip  = "Connect";
-            vm.CanConnect     = true;
-            vm.GlowBrushKey   = "EntangloAccentGlowBrush";
-            vm.AccentBrushKey = "EntangloAccentBrush";
-        }
-        vm.Refresh();
+
+        Devices.Clear();
+        foreach (var row in map.Values
+            .OrderByDescending(r => r.IsConnected)
+            .ThenByDescending(r => r.IsTrusted)
+            .ThenBy(r => r.DeviceName))
+            Devices.Add(row);
+
+        DeviceCountPill.Text    = Devices.Count.ToString();
+        DevicesEmpty.Visibility = Devices.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        DevicesList.Visibility  = Devices.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    void RefreshTrustedDevices()
+    void RefreshPendingUI()
     {
-        Trusted.Clear();
-        foreach (var device in App.Services.TrustStore.Devices)
-            Trusted.Add(TrustedDeviceViewModel.From(device));
-    }
-
-    void RefreshEmptyStates()
-    {
-        DevicesEmpty.Visibility = Peers.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        DevicesList.Visibility  = Peers.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
-
+        PendingCountPill.Text   = Pending.Count.ToString();
         PendingEmpty.Visibility = Pending.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         PendingList.Visibility  = Pending.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
-        PendingCountPill.Text   = Pending.Count.ToString();
-
-        TrustedEmpty.Visibility = Trusted.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        TrustedList.Visibility  = Trusted.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
-        TrustedCountPill.Text   = Trusted.Count.ToString();
     }
+
+    // ── Button handlers ──────────────────────────────────────────────────────
 
     void ScanButton_Click(object sender, RoutedEventArgs e)
     {
-        Peers.Clear();
-        StatusText.Text = "0";
-        AddKnownPeers();
         _discovery.Refresh();
-        RefreshEmptyStates();
+        RebuildDevices();
     }
-
-    void DevicesList_ItemClick(object sender, ItemClickEventArgs e) { }
 
     async void ConnectButton_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as Button)?.Tag is not PeerViewModel peer) return;
-        if (!peer.CanConnect) return;
-        StatusText.Text = $"Connecting to {peer.DeviceName}...";
-        AppLog.Info($"[UI] Connecting to {peer.DeviceName} at {peer.Host}:{peer.Port}");
-
+        if ((sender as Button)?.Tag is not DeviceRowViewModel row || !row.CanConnect) return;
+        AppLog.Info($"[UI] Connecting to {row.DeviceName} at {row.Host}:{row.Port}");
         try
         {
             await App.Services.Coordinator.ConnectToPeerAsync(
-                peer.Host,
-                peer.Port,
-                knownPeerId: null,
-                knownPeerName: peer.DeviceName,
+                row.Host!, row.Port, knownPeerId: null, knownPeerName: row.DeviceName,
                 CancellationToken.None);
-            StatusText.Text = $"Opening link to {peer.DeviceName}";
         }
         catch (Exception ex)
         {
-            StatusText.Text = $"Connection failed: {ex.Message}";
-            AppLog.Error($"[UI] Connection to {peer.DeviceName} failed: {ex.Message}");
+            AppLog.Error($"[UI] Connection to {row.DeviceName} failed: {ex.Message}");
         }
+    }
+
+    void RevokeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as MenuFlyoutItem)?.Tag is not DeviceRowViewModel row) return;
+        App.Services.TrustStore.Revoke(row.DeviceId);
+        App.Services.Coordinator.DisconnectPeer(row.DeviceId);
+        RebuildDevices();
     }
 
     async void ManualConnect_Click(object sender, RoutedEventArgs e)
@@ -203,8 +156,6 @@ public sealed partial class DevicesPage : Page
         var host = ManualHost.Text.Trim();
         if (string.IsNullOrEmpty(host)) return;
         if (!int.TryParse(ManualPort.Text.Trim(), out var port) || port <= 0) return;
-
-        StatusText.Text = $"Connecting to {host}:{port}...";
         try
         {
             await App.Services.Coordinator.ConnectToPeerAsync(
@@ -212,96 +163,103 @@ public sealed partial class DevicesPage : Page
         }
         catch (Exception ex)
         {
-            StatusText.Text = $"Connection failed: {ex.Message}";
+            AppLog.Error($"[UI] Manual connect to {host}:{port} failed: {ex.Message}");
         }
     }
 
     async void AllowButton_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as Button)?.Tag is PairRequestViewModel req)
-        {
-            await App.Services.Coordinator.AcceptPairingAsync(req.DeviceId, true);
-            Pending.Remove(req);
-            RefreshTrustedDevices();
-            RefreshAllPeerStatuses();
-            RefreshEmptyStates();
-        }
+        if ((sender as Button)?.Tag is not PairRequestViewModel req) return;
+        await App.Services.Coordinator.AcceptPairingAsync(req.DeviceId, true);
+        Pending.Remove(req);
+        RefreshPendingUI();
+        RebuildDevices();
     }
 
     async void BlockButton_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as Button)?.Tag is PairRequestViewModel req)
-        {
-            await App.Services.Coordinator.AcceptPairingAsync(req.DeviceId, false);
-            Pending.Remove(req);
-            RefreshEmptyStates();
-        }
-    }
-
-    void RevokeButton_Click(object sender, RoutedEventArgs e)
-    {
-        if ((sender as Button)?.Tag is not TrustedDeviceViewModel device) return;
-        App.Services.TrustStore.Revoke(device.DeviceId);
-        App.Services.Coordinator.DisconnectPeer(device.DeviceId);
-        RefreshTrustedDevices();
-        RefreshAllPeerStatuses();
-        RefreshEmptyStates();
+        if ((sender as Button)?.Tag is not PairRequestViewModel req) return;
+        await App.Services.Coordinator.AcceptPairingAsync(req.DeviceId, false);
+        Pending.Remove(req);
+        RefreshPendingUI();
     }
 }
 
-public class PeerViewModel : INotifyPropertyChanged
+// ── View models ───────────────────────────────────────────────────────────────
+
+public class DeviceRowViewModel : INotifyPropertyChanged
 {
-    public string DeviceName { get; set; } = "";
-    public string Host { get; set; } = "";
-    public int Port { get; set; }
+    string _deviceId   = "";
+    string _deviceName = "";
+    string _platform   = "";
+    bool   _isTrusted;
+    bool   _isConnected;
+    double? _rttMs;
+    string? _host;
+    int    _port;
 
-    public string StatusLabel   { get; set; } = "Discovered";
-    public string StatusGlyph   { get; set; } = "\uE701";   // Network signal
-    public string ActionGlyph   { get; set; } = "\uE71B";   // Link
-    public string ActionTooltip { get; set; } = "Connect";
-    public bool   CanConnect    { get; set; } = true;
-    public string GlowBrushKey   { get; set; } = "EntangloAccentGlowBrush";
-    public string AccentBrushKey { get; set; } = "EntangloAccentBrush";
+    public string  DeviceId    { get => _deviceId;    set => Set(ref _deviceId,    value); }
+    public string  DeviceName  { get => _deviceName;  set => Set(ref _deviceName,  value); }
+    public string  Platform    { get => _platform;    set => Set(ref _platform,    value); }
+    public bool    IsTrusted   { get => _isTrusted;   set => Set(ref _isTrusted,   value); }
+    public bool    IsConnected { get => _isConnected; set => Set(ref _isConnected, value); }
+    public double? RttMs       { get => _rttMs;       set => Set(ref _rttMs,       value); }
+    public string? Host        { get => _host;        set => Set(ref _host,        value); }
+    public int     Port        { get => _port;        set => Set(ref _port,        value); }
 
-    public Brush GlowBrush =>
-        (Brush)Application.Current.Resources[GlowBrushKey];
-    public Brush AccentBrush =>
-        (Brush)Application.Current.Resources[AccentBrushKey];
+    // "Linux · Trusted", "macOS · Connected", "Discovered", …
+    public string Subtitle
+    {
+        get
+        {
+            var status = IsConnected ? "Connected" : IsTrusted ? "Trusted" : "Discovered";
+            return string.IsNullOrEmpty(Platform) ? status : $"{Platform} · {status}";
+        }
+    }
 
-    public Visibility ConnectVisibility   => CanConnect ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility ConnectedVisibility => CanConnect ? Visibility.Collapsed : Visibility.Visible;
+    public string RttDisplay =>
+        IsConnected && RttMs.HasValue ? $"{RttMs.Value:F0} ms" : "—";
+
+    public Brush TrustBrush =>
+        Brush(IsTrusted ? "EntangloOkBrush" : "EntangloTextMutedBrush");
+
+    public Brush ConnectionBrush =>
+        Brush(IsConnected ? "EntangloAccentBrush" : "EntangloTextMutedBrush");
+
+    public Brush RttBrush =>
+        Brush(IsConnected ? "EntangloTextPrimaryBrush" : "EntangloTextMutedBrush");
+
+    public double FeatureOpacity => IsConnected ? 0.6 : 0.2;
+
+    public bool       CanConnect      => !IsConnected && Host != null;
+    public Visibility ConnectVisibility => CanConnect  ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility RevokeVisibility  => IsTrusted   ? Visibility.Visible : Visibility.Collapsed;
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    static Brush Brush(string resourceKey) =>
+        (Brush)Application.Current.Resources[resourceKey];
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    public void Refresh()
+
+    void Set<T>(ref T field, T value, [CallerMemberName] string? name = null)
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StatusLabel)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StatusGlyph)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActionGlyph)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ActionTooltip)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CanConnect)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(GlowBrush)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AccentBrush)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ConnectVisibility)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ConnectedVisibility)));
+        if (EqualityComparer<T>.Default.Equals(field, value)) return;
+        field = value;
+        Fire(name!);
+        // Fire all computed properties so bindings refresh automatically
+        Fire(nameof(Subtitle));     Fire(nameof(RttDisplay));
+        Fire(nameof(TrustBrush));   Fire(nameof(ConnectionBrush)); Fire(nameof(RttBrush));
+        Fire(nameof(FeatureOpacity));
+        Fire(nameof(CanConnect));   Fire(nameof(ConnectVisibility)); Fire(nameof(RevokeVisibility));
     }
+
+    void Fire(string name) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
 public class PairRequestViewModel
 {
-    public string DeviceId { get; set; } = "";
+    public string DeviceId   { get; set; } = "";
     public string DeviceName { get; set; } = "";
-}
-
-public class TrustedDeviceViewModel
-{
-    public string DeviceId { get; set; } = "";
-    public string DeviceName { get; set; } = "";
-    public string PairedAt { get; set; } = "";
-
-    public static TrustedDeviceViewModel From(TrustedDevice device) => new()
-    {
-        DeviceId = device.DeviceId,
-        DeviceName = device.DeviceName,
-        PairedAt = device.PairedAt.ToLocalTime().ToString("g"),
-    };
 }

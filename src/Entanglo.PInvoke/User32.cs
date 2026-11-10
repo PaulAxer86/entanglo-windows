@@ -39,6 +39,15 @@ public static partial class User32
     public const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
     public const uint KEYEVENTF_KEYUP       = 0x0002;
 
+    // Virtual keys for media and volume (not in KeyMap — sent as mediaKey events)
+    public const int VK_VOLUME_MUTE       = 0xAD;
+    public const int VK_VOLUME_DOWN       = 0xAE;
+    public const int VK_VOLUME_UP         = 0xAF;
+    public const int VK_MEDIA_NEXT_TRACK  = 0xB0;
+    public const int VK_MEDIA_PREV_TRACK  = 0xB1;
+    public const int VK_MEDIA_STOP        = 0xB2;
+    public const int VK_MEDIA_PLAY_PAUSE  = 0xB3;
+
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT { public int X; public int Y; }
 
@@ -154,6 +163,99 @@ public static partial class User32
 
     [LibraryImport("user32.dll")]
     public static partial short GetKeyState(int nVirtKey);
+
+    // ── Cursor confinement and positioning ───────────────────────────────────
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT { public int left; public int top; public int right; public int bottom; }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static unsafe partial bool ClipCursor(RECT* lpRect); // null = unclip
+
+    [LibraryImport("user32.dll")]
+    public static partial int ShowCursor([MarshalAs(UnmanagedType.Bool)] bool bShow);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetCursorPos(int X, int Y);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetCursorPos(out POINT lpPoint);
+
+    // ── Window creation (for Raw Input target) ────────────────────────────────
+
+    public const nint HWND_MESSAGE = -3;
+
+    [LibraryImport("user32.dll", EntryPoint = "CreateWindowExW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial nint CreateWindowExW(
+        uint   dwExStyle,
+        string lpClassName,
+        string? lpWindowName,
+        uint   dwStyle,
+        int X, int Y, int nWidth, int nHeight,
+        nint hWndParent, nint hMenu, nint hInstance, nint lpParam);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DestroyWindow(nint hWnd);
+
+    // ── Raw Input ─────────────────────────────────────────────────────────────
+
+    public const uint WM_INPUT       = 0x00FF;
+    public const uint RID_INPUT      = 0x10000003;
+    public const uint RIDEV_INPUTSINK = 0x00000100;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RAWINPUTDEVICE
+    {
+        public ushort usUsagePage;
+        public ushort usUsage;
+        public uint   dwFlags;
+        public nint   hwndTarget;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RAWINPUTHEADER
+    {
+        public uint  dwType;
+        public uint  dwSize;
+        public nint  hDevice;
+        public nuint wParam;
+    }
+
+    // Windows RAWMOUSE has a union for usButtonFlags/usButtonData vs ulButtons;
+    // only lLastX/lLastY are used here, so explicit layout with Size = 24.
+    [StructLayout(LayoutKind.Explicit, Size = 24)]
+    public struct RAWMOUSE
+    {
+        [FieldOffset(0)]  public ushort usFlags;
+        [FieldOffset(12)] public int    lLastX;
+        [FieldOffset(16)] public int    lLastY;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RAWINPUT
+    {
+        public RAWINPUTHEADER header;
+        public RAWMOUSE       mouse;
+    }
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool RegisterRawInputDevices(
+        [In] RAWINPUTDEVICE[] pRawInputDevices,
+        uint uiNumDevices,
+        uint cbSize);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial uint GetRawInputData(
+        nint hRawInput,
+        uint uiCommand,
+        nint pData,
+        ref uint pcbSize,
+        uint cbSizeHeader);
 
     // ── Clipboard ─────────────────────────────────────────────────────────────
     public const uint CF_UNICODETEXT = 13;

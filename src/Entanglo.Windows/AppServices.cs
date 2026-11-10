@@ -44,7 +44,7 @@ public sealed class AppServices : IDisposable
         TrustStore  = new TrustStore();
         TrustStore.Load();
         Coordinator   = new ConnectionCoordinator(DeviceId, sessionId, DeviceName, TrustStore);
-        Discovery     = new DiscoveryService(DeviceName, 0); // port assigned after StartListeningAsync
+        Discovery     = new DiscoveryService(DeviceName, 0, DeviceId); // port assigned after StartListeningAsync
         Injector      = new InputInjectionService();
 
         // Hook-based capture for the controller role (Windows → Mac).
@@ -121,13 +121,16 @@ public sealed class AppServices : IDisposable
     {
         if (!Settings.AutoDialTrusted) return;
 
-        // Auto-dial trusted peers so links re-establish without the user
-        // hitting Connect on every restart of either side. Match on display
-        // name as a fallback when the wire UUID isn't yet known.
+        // Prefer UUID-based trust check; fall back to name matching for older peers
+        // that do not advertise a Bonjour TXT id yet.
+        var trustedById   = peer.DeviceId != null && TrustStore.IsTrusted(peer.DeviceId);
         var trustedByName = TrustStore.Devices.Any(d =>
             string.Equals(d.DeviceName, peer.InstanceName, StringComparison.OrdinalIgnoreCase));
-        if (!trustedByName) return;
+        if (!trustedById && !trustedByName) return;
 
+        // Skip if already connected by UUID
+        if (peer.DeviceId != null && Coordinator.IsConnectedTo(peer.DeviceId)) return;
+        // Skip if already connected by name
         if (Coordinator.ActivePeers.Any(p =>
             string.Equals(p.DeviceName, peer.InstanceName, StringComparison.OrdinalIgnoreCase)))
             return;
@@ -140,7 +143,7 @@ public sealed class AppServices : IDisposable
         try
         {
             AppLog.Info($"[Auto] Re-dialing trusted peer {peer.InstanceName} @ {peer.Host}:{peer.Port}");
-            await Coordinator.ConnectToPeerAsync(peer.Host, peer.Port, null, peer.InstanceName, _cts.Token);
+            await Coordinator.ConnectToPeerAsync(peer.Host, peer.Port, peer.DeviceId, peer.InstanceName, _cts.Token);
         }
         catch (Exception ex)
         {
