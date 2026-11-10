@@ -8,9 +8,12 @@ public sealed class AppSettings
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Entanglo", "settings.json");
 
-    public bool ReceiveRemoteInput { get; set; } = true;
-    public bool AutoDialTrusted    { get; set; } = true;
+    public bool   ReceiveRemoteInput { get; set; } = true;
+    public bool   AutoDialTrusted    { get; set; } = true;
     public EdgeSwitchConfig EdgeConfig { get; set; } = new();
+    // Per-session pointer speed multiplier applied to relative mouse motion (not scroll).
+    // Clamped to [0.25, 4.0] at use; NaN or values out of range fall back to 1.0.
+    public double PointerSpeed { get; set; } = 1.0;
 
     public event Action? Changed;
 
