@@ -5,6 +5,7 @@ using System.Reflection;
 using Entanglo.Core.Logging;
 using Entanglo.Core.Protocol;
 using Entanglo.Core.Protocol.Payloads;
+using Entanglo.PInvoke;
 
 namespace Entanglo.Core.Net;
 
@@ -26,6 +27,8 @@ public sealed class PeerSession
     public double? PeerLastSentAtMs { get; set; }
     public string? Platform { get; set; }
     public string? AppVersion { get; set; }
+    public int?    ScreenWidth  { get; set; }
+    public int?    ScreenHeight { get; set; }
 
     public PeerSession(string deviceId, string deviceName, NetworkTransport transport, CancellationTokenSource cts)
     {
@@ -43,7 +46,9 @@ public record ActivePeer(
     string? AppVersion,
     double? LastRttMs,
     bool Trusted,
-    DateTimeOffset OpenedAt)
+    DateTimeOffset OpenedAt,
+    int? ScreenWidth  = null,
+    int? ScreenHeight = null)
 {
     /// <summary>UI-ready RTT string ("42 ms" or "—") — avoids a XAML converter.</summary>
     public string RttDisplay => LastRttMs.HasValue ? $"{LastRttMs.Value:F0} ms" : "—";
@@ -90,7 +95,9 @@ public sealed class ConnectionCoordinator : IDisposable
             s.AppVersion,
             s.LastRttMs,
             _trustStore.IsTrusted(s.DeviceId),
-            s.OpenedAt)).ToArray();
+            s.OpenedAt,
+            s.ScreenWidth,
+            s.ScreenHeight)).ToArray();
 
     public bool IsConnectedTo(string deviceId) => _peers.ContainsKey(deviceId);
 
@@ -215,7 +222,11 @@ public sealed class ConnectionCoordinator : IDisposable
         try
         {
             var appVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "0.1.0";
-            var hello = new HelloPayload(_deviceName, "PC", appVersion, ["controller", "receiver"], "Windows");
+            var sw = User32.GetSystemMetrics(User32.SM_CXSCREEN);
+            var sh = User32.GetSystemMetrics(User32.SM_CYSCREEN);
+            var hello = new HelloPayload(
+                _deviceName, "PC", appVersion, ["controller", "receiver"], "Windows",
+                sw > 0 ? sw : null, sh > 0 ? sh : null);
             AppLog.Info($"[Net] TX hello to {peerName}");
             await transport.SendFrameAsync(
                 MessageCodec.Encode(MessageType.Hello, _deviceId, _sessionId, hello), cts.Token);
@@ -271,14 +282,24 @@ public sealed class ConnectionCoordinator : IDisposable
                 var h = MessageCodec.DecodePayload<HelloPayload>(env);
                 AppLog.Info($"[Net] Hello from {h.DeviceName} ({env.SenderDeviceId}, {h.Platform ?? "?"}, v{h.AppVersion})");
                 RekeySession(session, env.SenderDeviceId, h.DeviceName, h.Platform, h.AppVersion);
+                if (h.ScreenWidth > 0 && h.ScreenHeight > 0)
+                {
+                    session.ScreenWidth  = h.ScreenWidth;
+                    session.ScreenHeight = h.ScreenHeight;
+                }
                 // Trust-on-first-use: the macOS reference peer does not send
                 // pairRequest/pairResponse on the wire — pairing is local on
                 // its side. To keep the Windows trust store aligned, we trust
                 // any peer that completes a Hello handshake on the LAN.
                 if (!_trustStore.IsTrusted(env.SenderDeviceId))
                 {
-                    _trustStore.Trust(env.SenderDeviceId, h.DeviceName);
-                    AppLog.Info($"[Trust] TOFU-trusted {h.DeviceName} ({env.SenderDeviceId})");
+                    // Migrate any name-keyed trust entry for this device to its stable UUID
+                    MigrateTrustByName(env.SenderDeviceId, h.DeviceName);
+                    if (!_trustStore.IsTrusted(env.SenderDeviceId))
+                    {
+                        _trustStore.Trust(env.SenderDeviceId, h.DeviceName);
+                        AppLog.Info($"[Trust] TOFU-trusted {h.DeviceName} ({env.SenderDeviceId})");
+                    }
                 }
                 PeersChanged?.Invoke();
                 break;
@@ -343,6 +364,19 @@ public sealed class ConnectionCoordinator : IDisposable
                 break;
             }
         }
+    }
+
+    void MigrateTrustByName(string uuid, string displayName)
+    {
+        // If a trust record exists keyed by the display name (not a UUID — legacy behavior
+        // from very old installs or cross-platform imports), carry it over to the stable UUID.
+        var nameKeyed = _trustStore.Devices.FirstOrDefault(d =>
+            !Guid.TryParse(d.DeviceId, out _) &&
+            string.Equals(d.DeviceName, displayName, StringComparison.OrdinalIgnoreCase));
+        if (nameKeyed == null) return;
+        AppLog.Info($"[Trust] Migrating name-keyed trust '{nameKeyed.DeviceId}' → {uuid}");
+        _trustStore.Trust(uuid, displayName);
+        _trustStore.Revoke(nameKeyed.DeviceId);
     }
 
     void RekeySession(PeerSession session, string newDeviceId, string newDeviceName, string? platform, string? appVersion)
