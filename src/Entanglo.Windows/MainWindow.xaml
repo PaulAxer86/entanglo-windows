@@ -12,7 +12,7 @@
             IsBackButtonVisible="Collapsed"
             IsPaneToggleButtonVisible="True"
             IsSettingsVisible="False"
-            OpenPaneLength="200"
+            OpenPaneLength="180"
             SelectionChanged="NavView_SelectionChanged"
             Loaded="NavView_Loaded">
 

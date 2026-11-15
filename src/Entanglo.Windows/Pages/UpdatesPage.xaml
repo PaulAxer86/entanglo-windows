@@ -4,31 +4,28 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent">
 
-    <ScrollViewer Padding="28,20,28,28" VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="20" MaxWidth="1180" HorizontalAlignment="Stretch">
+    <ScrollViewer Padding="12" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="10" HorizontalAlignment="Stretch">
 
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel Spacing="4">
-                    <TextBlock Text="News &amp; Updates" Style="{StaticResource PageTitleStyle}"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <FontIcon Glyph="&#xE789;" FontSize="14"
+                              Foreground="{StaticResource EntangloAccentBrush}"/>
                     <TextBlock x:Name="HeaderSubText"
                                Text="What's new in Entanglo for Windows"
-                               Style="{StaticResource PageSubtitleStyle}"/>
+                               Style="{StaticResource PageTitleStyle}"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
-                            VerticalAlignment="Center">
-                    <Button x:Name="CheckButton" Click="CheckButton_Click"
-                            Style="{StaticResource SubtleButtonStyle}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE72C;" FontSize="14"
-                                      Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                            <TextBlock Text="Check for updates"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
+                <Button Grid.Column="1" x:Name="CheckButton" Click="CheckButton_Click"
+                        Style="{StaticResource SubtleButtonStyle}"
+                        VerticalAlignment="Center"
+                        ToolTipService.ToolTip="Check for updates">
+                    <FontIcon Glyph="&#xE72C;" FontSize="14"
+                              Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
+                </Button>
             </Grid>
 
             <!-- Available update banner -->
@@ -43,10 +40,10 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Border Width="44" Height="44" CornerRadius="6"
+                        <Border Width="32" Height="32" CornerRadius="6"
                                 Background="{StaticResource EntangloAccentBrush}"
                                 VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE896;" FontSize="20" Foreground="White"/>
+                            <FontIcon Glyph="&#xE896;" FontSize="15" Foreground="White"/>
                         </Border>
                         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                             <TextBlock x:Name="AvailableTitle"
@@ -91,10 +88,10 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Border Width="44" Height="44" CornerRadius="6"
+                    <Border Width="32" Height="32" CornerRadius="6"
                             Background="{StaticResource EntangloOkSoftBrush}"
                             VerticalAlignment="Center">
-                        <FontIcon Glyph="&#xE73E;" FontSize="20"
+                        <FontIcon Glyph="&#xE73E;" FontSize="15"
                                   Foreground="{StaticResource EntangloOkBrush}"/>
                     </Border>
                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">

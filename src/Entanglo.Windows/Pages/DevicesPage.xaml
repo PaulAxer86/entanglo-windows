@@ -4,20 +4,20 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent">
 
-    <ScrollViewer Padding="28,20,28,28" VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="20" MaxWidth="1180" HorizontalAlignment="Stretch">
+    <ScrollViewer Padding="12" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="10" HorizontalAlignment="Stretch">
 
-            <!-- Header -->
+            <!-- Header: icon title + refresh -->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Devices" Style="{StaticResource PageTitleStyle}"/>
-                    <TextBlock
-                        Text="One row per device. Hover over the trust, mouse, keyboard and connection icons for details. Dimmed icons indicate unavailable features."
-                        Style="{StaticResource PageSubtitleStyle}"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <FontIcon Glyph="&#xE968;" FontSize="14"
+                              Foreground="{StaticResource EntangloAccentBrush}"/>
+                    <TextBlock Text="Devices" Style="{StaticResource PageTitleStyle}"
+                               ToolTipService.ToolTip="Hover the trust, mouse, keyboard and connection icons for details. Dimmed icons indicate unavailable features."/>
                 </StackPanel>
                 <Button x:Name="ScanButton" Grid.Column="1" Click="ScanButton_Click"
                         Style="{StaticResource AccentButtonStyle}"
@@ -29,16 +29,17 @@
 
             <!-- Pending requests -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
+                <StackPanel Spacing="8">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Pending requests" Style="{StaticResource CardTitleStyle}"/>
-                            <TextBlock Text="Approve only devices you recognise on this LAN"
-                                       Style="{StaticResource CardSubtitleStyle}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xEA8F;" FontSize="14"
+                                      Foreground="{StaticResource EntangloWarnBrush}"/>
+                            <TextBlock Text="Pending requests" Style="{StaticResource CardTitleStyle}"
+                                       ToolTipService.ToolTip="Approve only devices you recognise on this LAN"/>
                         </StackPanel>
                         <Border Grid.Column="1" Style="{StaticResource PillWarnStyle}"
                                 ToolTipService.ToolTip="Pending pair requests">
@@ -134,7 +135,7 @@
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="1"/>
-                                        <RowDefinition Height="52"/>
+                                        <RowDefinition Height="44"/>
                                     </Grid.RowDefinitions>
                                     <!-- Row separator -->
                                     <Border Grid.Row="0" Height="1" Opacity="0.12"
@@ -219,11 +220,12 @@
 
             <!-- Manual connect -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="Connect manually" Style="{StaticResource CardTitleStyle}"/>
-                        <TextBlock Text="Enter a host and port if mDNS is blocked"
-                                   Style="{StaticResource CardSubtitleStyle}"/>
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE8C6;" FontSize="14"
+                                  Foreground="{StaticResource EntangloAccentBrush}"/>
+                        <TextBlock Text="Connect manually" Style="{StaticResource CardTitleStyle}"
+                                   ToolTipService.ToolTip="Enter a host and port if mDNS is blocked"/>
                     </StackPanel>
                     <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>

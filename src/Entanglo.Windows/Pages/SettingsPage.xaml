@@ -4,72 +4,63 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent">
 
-    <ScrollViewer Padding="28,20,28,28" VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="20" MaxWidth="1180" HorizontalAlignment="Stretch">
-
-            <StackPanel Spacing="4">
-                <TextBlock Text="Settings" Style="{StaticResource PageTitleStyle}"/>
-                <TextBlock Text="Configure how Entanglo behaves on this Windows machine."
-                           Style="{StaticResource PageSubtitleStyle}"/>
-            </StackPanel>
+    <ScrollViewer Padding="12" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="10" HorizontalAlignment="Stretch">
 
             <!-- Sharing -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="Sharing" Style="{StaticResource CardTitleStyle}"/>
-                        <TextBlock Text="What this PC accepts from connected Macs"
-                                   Style="{StaticResource CardSubtitleStyle}"/>
-                    </StackPanel>
-
-                    <Grid ColumnSpacing="12">
+                <StackPanel Spacing="6">
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Receive remote keyboard &amp; mouse"
-                                       Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                            <TextBlock Text="When OFF, Entanglo ignores input from trusted Macs"
-                                       Style="{StaticResource CardSubtitleStyle}"/>
-                        </StackPanel>
-                        <ToggleSwitch Grid.Column="1" x:Name="ReceiveInputToggle"
-                                      Toggled="ReceiveInputToggle_Toggled"
-                                      VerticalAlignment="Center"/>
+                        <FontIcon Glyph="&#xE765;" FontSize="14" VerticalAlignment="Center"
+                                  Foreground="{StaticResource EntangloAccentBrush}"/>
+                        <TextBlock Grid.Column="1" Text="Receive remote keyboard &amp; mouse"
+                                   VerticalAlignment="Center" FontSize="13"
+                                   Foreground="{StaticResource EntangloTextPrimaryBrush}"
+                                   ToolTipService.ToolTip="When OFF, Entanglo ignores input from trusted Macs"/>
+                        <ToggleSwitch Grid.Column="2" x:Name="ReceiveInputToggle"
+                                      Toggled="ReceiveInputToggle_Toggled" Margin="0,-6,-110,-6"
+                                      MinWidth="0" VerticalAlignment="Center"/>
                     </Grid>
 
                     <Rectangle Height="1" Fill="{StaticResource EntangloBorderSubtleBrush}"/>
 
-                    <Grid ColumnSpacing="12">
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Auto-dial trusted peers"
-                                       Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                            <TextBlock Text="Reconnect automatically when a known Mac appears on the LAN"
-                                       Style="{StaticResource CardSubtitleStyle}"/>
-                        </StackPanel>
-                        <ToggleSwitch Grid.Column="1" x:Name="AutoDialToggle"
-                                      Toggled="AutoDialToggle_Toggled"
-                                      VerticalAlignment="Center"/>
+                        <FontIcon Glyph="&#xE895;" FontSize="14" VerticalAlignment="Center"
+                                  Foreground="{StaticResource EntangloAccentBrush}"/>
+                        <TextBlock Grid.Column="1" Text="Auto-dial trusted peers"
+                                   VerticalAlignment="Center" FontSize="13"
+                                   Foreground="{StaticResource EntangloTextPrimaryBrush}"
+                                   ToolTipService.ToolTip="Reconnect automatically when a known Mac appears on the LAN"/>
+                        <ToggleSwitch Grid.Column="2" x:Name="AutoDialToggle"
+                                      Toggled="AutoDialToggle_Toggled" Margin="0,-6,-110,-6"
+                                      MinWidth="0" VerticalAlignment="Center"/>
                     </Grid>
                 </StackPanel>
             </Border>
 
             <!-- This device -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="This device" Style="{StaticResource CardTitleStyle}"/>
-                        <TextBlock Text="Identity advertised on the LAN"
-                                   Style="{StaticResource CardSubtitleStyle}"/>
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE7F8;" FontSize="14"
+                                  Foreground="{StaticResource EntangloAccentBrush}"/>
+                        <TextBlock Text="This device" Style="{StaticResource CardTitleStyle}"
+                                   ToolTipService.ToolTip="Identity advertised on the LAN"/>
                     </StackPanel>
 
-                    <Grid RowSpacing="12" ColumnSpacing="12">
+                    <Grid RowSpacing="6" ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="90"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
@@ -81,55 +72,69 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Text="Name" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" x:Name="DeviceNameText"
+                        <TextBlock Grid.Column="1" x:Name="DeviceNameText" FontSize="12"
                                    Foreground="{StaticResource EntangloTextPrimaryBrush}"
                                    VerticalAlignment="Center"/>
 
                         <TextBlock Grid.Row="1" Text="Listen port"
                                    Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DevicePortText"
+                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DevicePortText" FontSize="12"
                                    Foreground="{StaticResource EntangloTextPrimaryBrush}"
                                    VerticalAlignment="Center"/>
 
                         <TextBlock Grid.Row="2" Text="Screen size"
                                    Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="ScreenSizeText"
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="ScreenSizeText" FontSize="12"
                                    Foreground="{StaticResource EntangloTextPrimaryBrush}"
                                    VerticalAlignment="Center"/>
 
                         <TextBlock Grid.Row="3" Text="Device ID"
                                    Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
                         <TextBlock Grid.Row="3" Grid.Column="1" x:Name="DeviceIdText"
-                                   FontFamily="Consolas" FontSize="12"
+                                   FontFamily="Consolas" FontSize="11"
                                    Foreground="{StaticResource EntangloTextSecondaryBrush}"
                                    VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis"/>
-                        <Button Grid.Row="3" Grid.Column="2" Content="Copy"
+                        <Button Grid.Row="3" Grid.Column="2"
                                 Style="{StaticResource SubtleButtonStyle}"
-                                Click="CopyDeviceId_Click"/>
+                                Click="CopyDeviceId_Click"
+                                ToolTipService.ToolTip="Copy device ID">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="13"
+                                      Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
+                        </Button>
                     </Grid>
                 </StackPanel>
             </Border>
 
             <!-- Maintenance -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="Maintenance" Style="{StaticResource CardTitleStyle}"/>
-                        <TextBlock Text="Local state for diagnostics and recovery"
-                                   Style="{StaticResource CardSubtitleStyle}"/>
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE90F;" FontSize="14"
+                                  Foreground="{StaticResource EntangloAccentBrush}"/>
+                        <TextBlock Text="Maintenance" Style="{StaticResource CardTitleStyle}"
+                                   ToolTipService.ToolTip="Local state for diagnostics and recovery"/>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button Content="Open data folder"
-                                Style="{StaticResource SubtleButtonStyle}"
-                                Click="OpenDataFolder_Click"/>
-                        <Button Content="Open log file"
-                                Style="{StaticResource SubtleButtonStyle}"
-                                Click="OpenLog_Click"/>
-                        <Button Content="Reset device ID"
-                                Style="{StaticResource DangerButtonStyle}"
-                                Click="ResetDeviceId_Click"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Style="{StaticResource SubtleButtonStyle}"
+                                Click="OpenDataFolder_Click"
+                                ToolTipService.ToolTip="Open data folder">
+                            <FontIcon Glyph="&#xE8B7;" FontSize="14"
+                                      Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
+                        </Button>
+                        <Button Style="{StaticResource SubtleButtonStyle}"
+                                Click="OpenLog_Click"
+                                ToolTipService.ToolTip="Open log file">
+                            <FontIcon Glyph="&#xE9F9;" FontSize="14"
+                                      Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
+                        </Button>
+                        <Button Style="{StaticResource DangerButtonStyle}"
+                                Click="ResetDeviceId_Click"
+                                ToolTipService.ToolTip="Reset device ID — forces re-pairing with every trusted Mac on next launch">
+                            <FontIcon Glyph="&#xE777;" FontSize="14"
+                                      Foreground="{StaticResource EntangloDangerBrush}"/>
+                        </Button>
                     </StackPanel>
                     <TextBlock x:Name="MaintenanceHint"
                                Text="Resetting the device ID will force re-pairing with every trusted Mac on next launch."
@@ -139,21 +144,23 @@
 
             <!-- About -->
             <Border Style="{StaticResource CardStyle}">
-                <Grid ColumnSpacing="12">
+                <Grid ColumnSpacing="10">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="About" Style="{StaticResource CardTitleStyle}"/>
+                    <FontIcon Glyph="&#xE946;" FontSize="14" VerticalAlignment="Center"
+                              Foreground="{StaticResource EntangloAccentBrush}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                                VerticalAlignment="Center"
+                                ToolTipService.ToolTip="Closing the window keeps Entanglo running in the background. Use the quit button to fully exit.">
                         <TextBlock x:Name="VersionText"
-                                   Style="{StaticResource CardSubtitleStyle}"/>
-                        <TextBlock Text="Entanglo • native Mac ↔ Windows bridge"
-                                   Style="{StaticResource CardSubtitleStyle}"/>
-                        <TextBlock Text="Closing the window keeps Entanglo running in the background. Use this button to fully quit."
-                                   Style="{StaticResource CardSubtitleStyle}" TextWrapping="Wrap"/>
+                                   Style="{StaticResource CardSubtitleStyle}" VerticalAlignment="Center"/>
+                        <TextBlock Text="· native Mac ↔ Windows bridge"
+                                   Style="{StaticResource CardSubtitleStyle}" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <Button Grid.Column="1"
+                    <Button Grid.Column="2"
                             Style="{StaticResource DangerButtonStyle}"
                             VerticalAlignment="Center"
                             ToolTipService.ToolTip="Quit Entanglo"

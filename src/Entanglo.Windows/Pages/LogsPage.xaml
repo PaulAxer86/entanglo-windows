@@ -4,19 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent">
 
-    <Grid Padding="28,20,28,28" RowSpacing="20">
+    <Grid Padding="12" RowSpacing="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Spacing="4">
-            <TextBlock Text="Logs" Style="{StaticResource PageTitleStyle}"/>
-            <TextBlock Text="Live activity log for the Entanglo runtime on this PC."
-                       Style="{StaticResource PageSubtitleStyle}"/>
-        </StackPanel>
-
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="12">
+        <Border Style="{StaticResource CardStyle}" Padding="10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

@@ -2,14 +2,15 @@
 
 ## Published state
 
-**v0.1.61** — commit `main` (before this branch). Released on the website.
+**v0.1.62** — released 2026-11-10. Merged to `main`, installer on GitHub.
 
-## Branch: sync/linux-0.1.16
+- GitHub Release: `PaulAxer86/entanglo-website` → `v0.1.62` / `Entanglo-Setup-0.1.62.exe`
+- SHA256: `a481cf7be74df695684fdb564fcc9290775886d29475232f40ba528f8524800c` (44 950 151 bytes)
+- `latest-win.json` and `release-notes.json` updated in `entanglo-website`
 
-Closes the gap with **Linux 0.1.16** and **macOS 0.1.61**.
-All changes are on branch `sync/linux-0.1.16`; not yet merged to `main` or released.
+## What shipped in 0.1.62
 
-### What changed
+Closes the gap with **Linux 0.1.16** and **macOS 0.1.61** (branch `sync/linux-0.1.16`, merged to `main`).
 
 | Item | Change |
 |---|---|
@@ -21,25 +22,6 @@ All changes are on branch `sync/linux-0.1.16`; not yet merged to `main` or relea
 | **2.6 File transfer** | `fileAck` sent on the same transport that delivered chunks (not by senderDeviceId). 15-second ack wait after all chunks sent; falls back to "Sent (receipt not confirmed)" on timeout. `OutgoingFileTerminal` fires at most once per transfer. |
 | **2.8 Key mapping tests** | Digit row 5/6/7, full numpad, numpad Enter, all modifier bits and VK codes. 93 tests total, all passing. |
 
-### Verified by tests only (not yet live-tested)
-
-- Relative mouse injection math
-- Absolute coordinate mapping
-- Media key wire format
-- Pointer speed clamping
-- Hello round-trip with/without screen size
-- Key mapping regression suite
-- File transfer ack routing (unit logic only — large-file live test not yet run)
-
-### Waiting for user live tests (Step 3)
-
-Before release, test against Linux 0.1.16 on iMac1/iMac2:
-1. Linux → Windows: mouse (relative + absolute), keyboard, keypad, media keys, clipboard, edge return
-2. Windows → Linux: same + confinement (local cursor must not move), emergency stop (Escape)
-3. Files both directions: small files + ≥3 GB file (sender must show Sent, not Failed)
-4. Devices page: one row per device after upgrading existing install with saved trust
-5. Ethernet vs Wi-Fi path failover (if applicable)
-
 ---
 
 ## Open issues (priority order)
@@ -48,7 +30,7 @@ Before release, test against Linux 0.1.16 on iMac1/iMac2:
 2. **Pointer speed UI** — `AppSettings.PointerSpeed` exists and is persisted, but there is no settings page control yet. Users must edit `settings.json` manually.
 3. **Per-device pointer speed** — SYNC-PROMPT asks for per-device; current implementation is global. Architecture note: would need a dictionary keyed by DeviceId in AppSettings.
 4. **Brightness key injection** — `brightnessUp`/`brightnessDown` have no Win32 VK. WMI `WmiMonitorBrightnessMethods` path not yet implemented; events are logged and ignored.
-5. **Large-file heartbeat timeout** — added `await Task.Delay(5)` between chunks. Not live-tested with files >1 GB yet.
+5. **Large-file live test** — file transfer ack routing fixed in 0.1.62; not yet tested with files >1 GB.
 
 ---
 
@@ -61,19 +43,14 @@ Before release, test against Linux 0.1.16 on iMac1/iMac2:
 - **Raw Input window**: The hidden HWND_MESSAGE window uses the "STATIC" class. If `CreateWindowExW` fails (unusual sandbox), Raw Input falls back gracefully with a warning log; relative motion is unavailable but absolute and keyboard input still work.
 - **ShowCursor balance**: `ShowCursor` modifies a per-process internal counter. `_cursorHidden` bool ensures we always call `ShowCursor(true)` exactly once for each `ShowCursor(false)`.
 
-## Rollback
+---
 
-To roll back to v0.1.61:
-```
-git checkout main
-```
-No database or trust-store migrations are destructive. If a trust.json.enc was written by this branch, it remains readable by 0.1.61 (UUID keys were always used on Windows).
+## Release process (next version)
 
-## Release (Step 4)
-
-After user confirms live tests:
-1. Bump `<Version>` to `0.1.62` in `Entanglo.Windows.csproj` and `Installer/Entanglo.iss`
-2. Build installer: `iscc Installer/Entanglo.iss`
-3. Create GitHub release `v0.1.62` with installer asset
-4. Update `public/updates/latest-win.json` and `src/data/release-notes.json` in `entanglo-website`
-5. Ask user for explicit approval before pushing the release or the website
+1. Bump `<Version>` in `src/Entanglo.Windows/Entanglo.Windows.csproj`
+2. Bump `#define MyAppVersion` in `src/Entanglo.Windows/Installer/Entanglo.iss`
+3. `dotnet publish src/Entanglo.Windows/Entanglo.Windows.csproj -c Release -p:Platform=x64 -p:RuntimeIdentifier=win-x64 --self-contained true -o src/Entanglo.Windows/bin/Release/net8.0-windows10.0.19041.0/win-x64/publish`
+4. `cd src/Entanglo.Windows/Installer && iscc Entanglo.iss` → produces `Entanglo-Setup-<version>.exe`
+5. Commit version bump; merge to `main`; push `entanglo-windows`
+6. `gh release create v<version> Entanglo-Setup-<version>.exe --repo PaulAxer86/entanglo-website`
+7. Update `public/updates/latest-win.json` and `src/data/release-notes.json` in `entanglo-website`; push

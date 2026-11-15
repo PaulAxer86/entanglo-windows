@@ -4,79 +4,70 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent">
 
-    <ScrollViewer Padding="28,20,28,28" VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="20" MaxWidth="1180" HorizontalAlignment="Stretch">
+    <ScrollViewer Padding="12" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="10" HorizontalAlignment="Stretch">
 
-            <StackPanel Spacing="4">
-                <TextBlock Text="Input Sharing" Style="{StaticResource PageTitleStyle}"/>
-                <TextBlock Text="Control trusted Macs by pushing the cursor against an edge of this screen."
-                           Style="{StaticResource PageSubtitleStyle}"/>
-            </StackPanel>
-
-            <!-- Sharing toggles -->
+            <!-- Sharing toggles: one line each, tooltip carries the explanation -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="Sharing" Style="{StaticResource CardTitleStyle}"/>
-                        <TextBlock Text="Direction of input flow for this PC"
-                                   Style="{StaticResource CardSubtitleStyle}"/>
-                    </StackPanel>
-
-                    <Grid ColumnSpacing="12">
+                <StackPanel Spacing="6">
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Share my keyboard &amp; mouse"
-                                       Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                            <TextBlock Text="When ON, this PC can drive trusted Macs across screen edges"
-                                       Style="{StaticResource CardSubtitleStyle}"/>
-                        </StackPanel>
-                        <ToggleSwitch Grid.Column="1" x:Name="ShareToggle"
-                                      Toggled="ShareToggle_Toggled"
-                                      VerticalAlignment="Center"/>
+                        <FontIcon Glyph="&#xEC18;" FontSize="14" VerticalAlignment="Center"
+                                  Foreground="{StaticResource EntangloAccentBrush}"/>
+                        <TextBlock Grid.Column="1" Text="Share my keyboard &amp; mouse"
+                                   VerticalAlignment="Center" FontSize="13"
+                                   Foreground="{StaticResource EntangloTextPrimaryBrush}"
+                                   ToolTipService.ToolTip="When ON, this PC can drive trusted Macs across screen edges"/>
+                        <ToggleSwitch Grid.Column="2" x:Name="ShareToggle"
+                                      Toggled="ShareToggle_Toggled" Margin="0,-6,-110,-6"
+                                      MinWidth="0" VerticalAlignment="Center"/>
                     </Grid>
 
                     <Rectangle Height="1" Fill="{StaticResource EntangloBorderSubtleBrush}"/>
 
-                    <Grid ColumnSpacing="12">
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Receive remote keyboard &amp; mouse"
-                                       Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                            <TextBlock Text="When ON, trusted Macs can drive this PC"
-                                       Style="{StaticResource CardSubtitleStyle}"/>
-                        </StackPanel>
-                        <ToggleSwitch Grid.Column="1" x:Name="ReceiveToggle"
-                                      Toggled="ReceiveToggle_Toggled"
-                                      VerticalAlignment="Center"/>
+                        <FontIcon Glyph="&#xE765;" FontSize="14" VerticalAlignment="Center"
+                                  Foreground="{StaticResource EntangloAccentBrush}"/>
+                        <TextBlock Grid.Column="1" Text="Receive remote keyboard &amp; mouse"
+                                   VerticalAlignment="Center" FontSize="13"
+                                   Foreground="{StaticResource EntangloTextPrimaryBrush}"
+                                   ToolTipService.ToolTip="When ON, trusted Macs can drive this PC"/>
+                        <ToggleSwitch Grid.Column="2" x:Name="ReceiveToggle"
+                                      Toggled="ReceiveToggle_Toggled" Margin="0,-6,-110,-6"
+                                      MinWidth="0" VerticalAlignment="Center"/>
                     </Grid>
                 </StackPanel>
             </Border>
 
             <!-- Edge switching -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
-                    <Grid>
+                <StackPanel Spacing="8">
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Edge switching" Style="{StaticResource CardTitleStyle}"/>
-                            <TextBlock Text="Pick which trusted device sits on each side of this screen"
-                                       Style="{StaticResource CardSubtitleStyle}"/>
-                        </StackPanel>
-                        <ToggleSwitch Grid.Column="1" x:Name="EdgeEnabledToggle"
-                                      Toggled="EdgeEnabledToggle_Toggled"
-                                      VerticalAlignment="Center"/>
+                        <FontIcon Glyph="&#xE8A9;" FontSize="14" VerticalAlignment="Center"
+                                  Foreground="{StaticResource EntangloAccentBrush}"/>
+                        <TextBlock Grid.Column="1" Text="Edge switching"
+                                   Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"
+                                   ToolTipService.ToolTip="Pick which trusted device sits on each side of this screen"/>
+                        <ToggleSwitch Grid.Column="2" x:Name="EdgeEnabledToggle"
+                                      Toggled="EdgeEnabledToggle_Toggled" Margin="0,-6,-110,-6"
+                                      MinWidth="0" VerticalAlignment="Center"/>
                     </Grid>
 
-                    <Grid x:Name="EdgePickers" RowSpacing="14" ColumnSpacing="14">
+                    <Grid x:Name="EdgePickers" RowSpacing="8" ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
@@ -87,63 +78,63 @@
                         </Grid.RowDefinitions>
 
                         <Border Style="{StaticResource SoftCardStyle}">
-                            <StackPanel Spacing="6">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE76B;" FontSize="14"
-                                              Foreground="{StaticResource EntangloAccentBrush}"/>
-                                    <TextBlock Text="Left edge"
-                                               Foreground="{StaticResource EntangloTextPrimaryBrush}"
-                                               FontWeight="SemiBold"/>
-                                </StackPanel>
-                                <ComboBox x:Name="LeftPeerBox" HorizontalAlignment="Stretch"
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE76B;" FontSize="14" VerticalAlignment="Center"
+                                          Foreground="{StaticResource EntangloAccentBrush}"
+                                          ToolTipService.ToolTip="Left edge"/>
+                                <ComboBox Grid.Column="1" x:Name="LeftPeerBox" HorizontalAlignment="Stretch"
                                           PlaceholderText="(no device)"
                                           SelectionChanged="LeftPeerBox_SelectionChanged"/>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <Border Grid.Column="1" Style="{StaticResource SoftCardStyle}">
-                            <StackPanel Spacing="6">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE76C;" FontSize="14"
-                                              Foreground="{StaticResource EntangloAccentBrush}"/>
-                                    <TextBlock Text="Right edge"
-                                               Foreground="{StaticResource EntangloTextPrimaryBrush}"
-                                               FontWeight="SemiBold"/>
-                                </StackPanel>
-                                <ComboBox x:Name="RightPeerBox" HorizontalAlignment="Stretch"
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE76C;" FontSize="14" VerticalAlignment="Center"
+                                          Foreground="{StaticResource EntangloAccentBrush}"
+                                          ToolTipService.ToolTip="Right edge"/>
+                                <ComboBox Grid.Column="1" x:Name="RightPeerBox" HorizontalAlignment="Stretch"
                                           PlaceholderText="(no device)"
                                           SelectionChanged="RightPeerBox_SelectionChanged"/>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <Border Grid.Row="1" Style="{StaticResource SoftCardStyle}">
-                            <StackPanel Spacing="6">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE70E;" FontSize="14"
-                                              Foreground="{StaticResource EntangloAccentBrush}"/>
-                                    <TextBlock Text="Top edge"
-                                               Foreground="{StaticResource EntangloTextPrimaryBrush}"
-                                               FontWeight="SemiBold"/>
-                                </StackPanel>
-                                <ComboBox x:Name="TopPeerBox" HorizontalAlignment="Stretch"
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE70E;" FontSize="14" VerticalAlignment="Center"
+                                          Foreground="{StaticResource EntangloAccentBrush}"
+                                          ToolTipService.ToolTip="Top edge"/>
+                                <ComboBox Grid.Column="1" x:Name="TopPeerBox" HorizontalAlignment="Stretch"
                                           PlaceholderText="(no device)"
                                           SelectionChanged="TopPeerBox_SelectionChanged"/>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource SoftCardStyle}">
-                            <StackPanel Spacing="6">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE70D;" FontSize="14"
-                                              Foreground="{StaticResource EntangloAccentBrush}"/>
-                                    <TextBlock Text="Bottom edge"
-                                               Foreground="{StaticResource EntangloTextPrimaryBrush}"
-                                               FontWeight="SemiBold"/>
-                                </StackPanel>
-                                <ComboBox x:Name="BottomPeerBox" HorizontalAlignment="Stretch"
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE70D;" FontSize="14" VerticalAlignment="Center"
+                                          Foreground="{StaticResource EntangloAccentBrush}"
+                                          ToolTipService.ToolTip="Bottom edge"/>
+                                <ComboBox Grid.Column="1" x:Name="BottomPeerBox" HorizontalAlignment="Stretch"
                                           PlaceholderText="(no device)"
                                           SelectionChanged="BottomPeerBox_SelectionChanged"/>
-                            </StackPanel>
+                            </Grid>
                         </Border>
                     </Grid>
 
@@ -154,43 +145,38 @@
                 </StackPanel>
             </Border>
 
-            <!-- Status -->
-            <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="14">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="Status" Style="{StaticResource CardTitleStyle}"/>
-                        <TextBlock Text="Live link health"
-                                   Style="{StaticResource CardSubtitleStyle}"/>
-                    </StackPanel>
-                    <Grid RowSpacing="10" ColumnSpacing="10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="160"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Text="Active target" Style="{StaticResource LabelStyle}"/>
-                        <TextBlock Grid.Column="1" x:Name="PeerText" Text="—"
-                                   Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                        <TextBlock Grid.Row="1" Text="Role" Style="{StaticResource LabelStyle}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="RoleText" Text="Idle"
-                                   Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                        <TextBlock Grid.Row="2" Text="Emergency stop" Style="{StaticResource LabelStyle}"/>
-                        <Button Grid.Row="2" Grid.Column="1" Content="Press Escape × 3"
-                                Style="{StaticResource SubtleButtonStyle}"
-                                HorizontalAlignment="Left"
-                                Click="StopButton_Click"/>
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardStyle}">
-                <TextBlock Text="Input injection is blocked unless the receiver is trusted, receive mode is enabled, the heartbeat is alive and emergency stop is not active."
-                           TextWrapping="Wrap"
-                           Style="{StaticResource CardSubtitleStyle}"/>
+            <!-- Status: single compact row -->
+            <Border Style="{StaticResource CardStyle}"
+                    ToolTipService.ToolTip="Input injection is blocked unless the receiver is trusted, receive mode is enabled, the heartbeat is alive and emergency stop is not active.">
+                <Grid ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Glyph="&#xE703;" FontSize="14" VerticalAlignment="Center"
+                              Foreground="{StaticResource EntangloAccentBrush}"
+                              ToolTipService.ToolTip="Active target"/>
+                    <TextBlock Grid.Column="1" x:Name="PeerText" Text="—" FontSize="13"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
+                    <FontIcon Grid.Column="2" Glyph="&#xE823;" FontSize="14" Margin="10,0,0,0"
+                              VerticalAlignment="Center"
+                              Foreground="{StaticResource EntangloTextSecondaryBrush}"
+                              ToolTipService.ToolTip="Role"/>
+                    <TextBlock Grid.Column="3" x:Name="RoleText" Text="Idle" FontSize="13"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
+                    <Button Grid.Column="5" Style="{StaticResource DangerButtonStyle}"
+                            Click="StopButton_Click"
+                            ToolTipService.ToolTip="Emergency stop (same as pressing Escape × 3)">
+                        <FontIcon Glyph="&#xE71A;" FontSize="14"
+                                  Foreground="{StaticResource EntangloDangerBrush}"/>
+                    </Button>
+                </Grid>
             </Border>
         </StackPanel>
     </ScrollViewer>

@@ -4,25 +4,20 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent">
 
-    <ScrollViewer Padding="28,20,28,28" VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="20" MaxWidth="1180" HorizontalAlignment="Stretch">
-
-            <StackPanel Spacing="4">
-                <TextBlock Text="Files" Style="{StaticResource PageTitleStyle}"/>
-                <TextBlock Text="Send files to your paired devices. Received files land in %LocalAppData%\Entanglo\Downloads\."
-                           Style="{StaticResource PageSubtitleStyle}"/>
-            </StackPanel>
+    <ScrollViewer Padding="12" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="10" HorizontalAlignment="Stretch">
 
             <!-- Send card -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="12">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <FontIcon Glyph="&#xE898;" FontSize="16"
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE898;" FontSize="14"
                                   Foreground="{StaticResource EntangloAccentBrush}"/>
-                        <TextBlock Text="Send a file" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="Send a file" Style="{StaticResource CardTitleStyle}"
+                                   ToolTipService.ToolTip="Received files land in %LocalAppData%\Entanglo\Downloads\"/>
                     </StackPanel>
 
-                    <Grid ColumnSpacing="12">
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
@@ -32,11 +27,9 @@
                                   HorizontalAlignment="Stretch"/>
                         <Button Grid.Column="1" x:Name="PickButton"
                                 Click="PickButton_Click"
-                                Style="{StaticResource AccentButtonStyle}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE8E5;" FontSize="14" Foreground="White"/>
-                                <TextBlock Text="Choose file…"/>
-                            </StackPanel>
+                                Style="{StaticResource AccentButtonStyle}"
+                                ToolTipService.ToolTip="Choose file to send">
+                            <FontIcon Glyph="&#xE8E5;" FontSize="14" Foreground="White"/>
                         </Button>
                     </Grid>
 
@@ -48,14 +41,14 @@
 
             <!-- Transfers card -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel Spacing="12">
+                <StackPanel Spacing="8">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <FontIcon Glyph="&#xE8B5;" FontSize="16"
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE8B5;" FontSize="14"
                                       Foreground="{StaticResource EntangloAccentBrush}"/>
                             <TextBlock Text="Transfers" Style="{StaticResource CardTitleStyle}"/>
                         </StackPanel>
@@ -63,21 +56,17 @@
                             <Button x:Name="OpenDownloadsButton"
                                     Click="OpenDownloadsButton_Click"
                                     Visibility="Collapsed"
-                                    Style="{StaticResource SubtleButtonStyle}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE838;" FontSize="12"
-                                              Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                                    <TextBlock Text="Open Downloads"/>
-                                </StackPanel>
+                                    Style="{StaticResource SubtleButtonStyle}"
+                                    ToolTipService.ToolTip="Open Downloads folder">
+                                <FontIcon Glyph="&#xE838;" FontSize="13"
+                                          Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
                             </Button>
                             <Button x:Name="ClearButton"
                                     Click="ClearButton_Click"
-                                    Style="{StaticResource SubtleButtonStyle}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE74D;" FontSize="12"
-                                              Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
-                                    <TextBlock Text="Clear finished"/>
-                                </StackPanel>
+                                    Style="{StaticResource SubtleButtonStyle}"
+                                    ToolTipService.ToolTip="Clear finished transfers">
+                                <FontIcon Glyph="&#xE74D;" FontSize="13"
+                                          Foreground="{StaticResource EntangloTextPrimaryBrush}"/>
                             </Button>
                         </StackPanel>
                     </Grid>

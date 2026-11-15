@@ -14,14 +14,15 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         SetMicaBackdrop();
-        AppWindow.Resize(new WinSize(900, 620));
+        // Compact default matching the macOS window (768×520 logical).
+        AppWindow.Resize(new WinSize(820, 560));
         AppWindow.Changed += (_, args) =>
         {
             if (!args.DidSizeChange) return;
             if (AppWindow.Presenter is OverlappedPresenter op && op.State == OverlappedPresenterState.Minimized) return;
             var s = AppWindow.Size;
-            if (s.Width < 800 || s.Height < 560)
-                AppWindow.Resize(new WinSize(Math.Max(s.Width, 800), Math.Max(s.Height, 560)));
+            if (s.Width < 760 || s.Height < 500)
+                AppWindow.Resize(new WinSize(Math.Max(s.Width, 760), Math.Max(s.Height, 500)));
         };
     }
 
